@@ -22,8 +22,6 @@ var _s = __turbopack_context__.k.signature();
 ;
 ;
 ;
-// Import wallet adapter CSS
-__turbopack_context__.r("[project]/node_modules/.pnpm/@solana+wallet-adapter-reac_43c3424b03a9d969fbd16e2ed1a74901/node_modules/@solana/wallet-adapter-react-ui/styles.css [app-client] (css)");
 function WalletContextProvider(param) {
     let { children } = param;
     _s();
@@ -46,17 +44,17 @@ function WalletContextProvider(param) {
                 children: children
             }, void 0, false, {
                 fileName: "[project]/apps/web/src/components/providers/wallet-provider.tsx",
-                lineNumber: 27,
+                lineNumber: 24,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/apps/web/src/components/providers/wallet-provider.tsx",
-            lineNumber: 26,
+            lineNumber: 23,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/apps/web/src/components/providers/wallet-provider.tsx",
-        lineNumber: 25,
+        lineNumber: 22,
         columnNumber: 5
     }, this);
 }

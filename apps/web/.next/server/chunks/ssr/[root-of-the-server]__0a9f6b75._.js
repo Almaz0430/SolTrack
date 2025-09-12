@@ -135,8 +135,6 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$ne
 ;
 ;
 ;
-// Import wallet adapter CSS
-({});
 function WalletContextProvider({ children }) {
     // You can also provide a custom RPC endpoint
     const endpoint = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$3_$40$babel$2b$core$40$7$2e$2_7229a6f3c8984d47e457499a8a3f8b03$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMemo"])(()=>(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$solana$2b$web3$2e$js$40$1$2e$98$2e$4_buff_01c447ebc051143320b98961a3cab574$2f$node_modules$2f40$solana$2f$web3$2e$js$2f$lib$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["clusterApiUrl"])('devnet'), []);
@@ -153,17 +151,17 @@ function WalletContextProvider({ children }) {
                 children: children
             }, void 0, false, {
                 fileName: "[project]/apps/web/src/components/providers/wallet-provider.tsx",
-                lineNumber: 27,
+                lineNumber: 24,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/apps/web/src/components/providers/wallet-provider.tsx",
-            lineNumber: 26,
+            lineNumber: 23,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/apps/web/src/components/providers/wallet-provider.tsx",
-        lineNumber: 25,
+        lineNumber: 22,
         columnNumber: 5
     }, this);
 }
