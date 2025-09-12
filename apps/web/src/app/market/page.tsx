@@ -1,7 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Music, Guitar, Piano, Drum, Mic, Volume2 } from 'lucide-react';
+import { useNFTMarketplace } from '@/hooks/useNFTMarketplace';
+import { useNotifications } from '@/hooks/useNotifications';
+import { WalletInfo } from '@/components/WalletInfo';
+import { NFTCard } from '@/components/NFTCard';
+import { TransactionHistory } from '@/components/TransactionHistory';
+import { NotificationContainer } from '@/components/NotificationToast';
+import { Loader2, RefreshCw } from 'lucide-react';
 
 export default function MarketPage() {
   const [selectedCategory, setSelectedCategory] = useState('Все категории');
@@ -9,8 +15,25 @@ export default function MarketPage() {
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
 
+  const { nfts, loading, balance, userNFTs, buyNFT, fetchNFTs, isProcessing } = useNFTMarketplace();
+  const { notifications, removeNotification, success, error } = useNotifications();
+
   const categories = ['Все категории', 'Электронная музыка', 'Хип-хоп', 'Рок', 'Джаз'];
   const sortOptions = ['Сортировка', 'По цене ↑', 'По цене ↓', 'По популярности', 'Новые'];
+
+  const handlePurchaseSuccess = (nft: any, signature: string) => {
+    success(
+      'NFT успешно куплен!',
+      `"${nft.name}" теперь в вашем кошельке. Транзакция: ${signature.slice(0, 8)}...`
+    );
+  };
+
+  const handlePurchaseError = (nft: any, errorMessage: string) => {
+    error(
+      'Ошибка покупки NFT',
+      `Не удалось купить "${nft.name}": ${errorMessage}`
+    );
+  };
 
   // Закрытие выпадающих списков при клике вне их
   useEffect(() => {
@@ -39,6 +62,14 @@ export default function MarketPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={fetchNFTs}
+              disabled={loading}
+              className="flex items-center gap-2 bg-dark-card hover:bg-purple-600/20 text-muted-light hover:text-light border border-dark hover:border-purple-600/50 px-4 py-3 rounded-2xl font-medium transition-all duration-200"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              Обновить
+            </button>
             {/* Категории */}
             <div className="relative" onClick={(e) => e.stopPropagation()}>
               <button
@@ -119,133 +150,64 @@ export default function MarketPage() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {/* NFT карточка 1 */}
-          <div className="bg-dark-card rounded-3xl overflow-hidden border border-dark hover:shadow-lg hover:shadow-purple-600/20 transition-all duration-300 group hover:border-purple-600/50">
-            <div className="aspect-square bg-gradient-to-br from-purple-600/20 to-purple-800/20 flex items-center justify-center group-hover:scale-105 transition-transform duration-300 border-b border-dark">
-              <Music className="w-16 h-16 text-purple-400" />
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <h3 className="font-medium text-xl text-light">Midnight Dreams</h3>
-                <p className="text-muted-light font-light">by ElectroWave</p>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-2xl font-medium text-light">2.5 SOL</span>
-                <span className="text-sm text-muted-light font-light">$180</span>
-              </div>
-              <button className="w-full accent-purple text-white py-3 rounded-2xl font-medium transition-all duration-200 hover:scale-105 shadow-lg shadow-purple-600/25">
-                Купить сейчас
-              </button>
-            </div>
+        <div className="grid lg:grid-cols-4 gap-8 mb-12">
+          {/* Информация о кошельке */}
+          <div className="lg:col-span-1 space-y-6">
+            <WalletInfo balance={balance} />
+            <TransactionHistory />
           </div>
 
-          {/* NFT карточка 2 */}
-          <div className="bg-dark-card rounded-3xl overflow-hidden border border-dark hover:shadow-lg hover:shadow-purple-600/20 transition-all duration-300 group hover:border-purple-600/50">
-            <div className="aspect-square bg-gradient-to-br from-purple-600/20 to-purple-800/20 flex items-center justify-center group-hover:scale-105 transition-transform duration-300 border-b border-dark">
-              <Guitar className="w-16 h-16 text-purple-400" />
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <h3 className="font-medium text-xl text-light">Rock Anthem #42</h3>
-                <p className="text-muted-light font-light">by RockLegend</p>
+          {/* Основной контент */}
+          <div className="lg:col-span-3 space-y-8">
+            {loading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="flex items-center gap-3 text-muted-light">
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                  <span>Загрузка NFT...</span>
+                </div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-2xl font-medium text-light">1.8 SOL</span>
-                <span className="text-sm text-muted-light font-light">$129</span>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {nfts.map((nft) => (
+                  <NFTCard
+                    key={nft.id}
+                    nft={nft}
+                    onBuy={buyNFT}
+                    isOwned={userNFTs.includes(nft.mint)}
+                    isProcessing={isProcessing}
+                    onSuccess={handlePurchaseSuccess}
+                    onError={handlePurchaseError}
+                  />
+                ))}
               </div>
-              <button className="w-full accent-purple text-white py-3 rounded-2xl font-medium transition-all duration-200 hover:scale-105 shadow-lg shadow-purple-600/25">
-                Купить сейчас
-              </button>
-            </div>
-          </div>
+            )}
 
-          {/* NFT карточка 3 */}
-          <div className="bg-dark-card rounded-3xl overflow-hidden border border-dark hover:shadow-lg hover:shadow-purple-600/20 transition-all duration-300 group hover:border-purple-600/50">
-            <div className="aspect-square bg-gradient-to-br from-purple-600/20 to-purple-800/20 flex items-center justify-center group-hover:scale-105 transition-transform duration-300 border-b border-dark">
-              <Piano className="w-16 h-16 text-purple-400" />
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <h3 className="font-medium text-xl text-light">Jazz Fusion</h3>
-                <p className="text-muted-light font-light">by SmoothJazz</p>
+            {!loading && nfts.length === 0 && (
+              <div className="text-center py-20">
+                <p className="text-muted-light text-lg">NFT не найдены</p>
+                <button
+                  onClick={fetchNFTs}
+                  className="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-2xl font-medium transition-colors"
+                >
+                  Попробовать снова
+                </button>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-2xl font-medium text-light">3.2 SOL</span>
-                <span className="text-sm text-muted-light font-light">$230</span>
-              </div>
-              <button className="w-full accent-purple text-white py-3 rounded-2xl font-medium transition-all duration-200 hover:scale-105 shadow-lg shadow-purple-600/25">
-                Купить сейчас
-              </button>
-            </div>
-          </div>
-
-          {/* NFT карточка 4 */}
-          <div className="bg-dark-card rounded-3xl overflow-hidden border border-dark hover:shadow-lg hover:shadow-purple-600/20 transition-all duration-300 group hover:border-purple-600/50">
-            <div className="aspect-square bg-gradient-to-br from-purple-600/20 to-purple-800/20 flex items-center justify-center group-hover:scale-105 transition-transform duration-300 border-b border-dark">
-              <Drum className="w-16 h-16 text-purple-400" />
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <h3 className="font-medium text-xl text-light">Beat Drop</h3>
-                <p className="text-muted-light font-light">by DrumMaster</p>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-2xl font-medium text-light">0.9 SOL</span>
-                <span className="text-sm text-muted-light font-light">$65</span>
-              </div>
-              <button className="w-full accent-purple text-white py-3 rounded-2xl font-medium transition-all duration-200 hover:scale-105 shadow-lg shadow-purple-600/25">
-                Купить сейчас
-              </button>
-            </div>
-          </div>
-
-          {/* NFT карточка 5 */}
-          <div className="bg-dark-card rounded-3xl overflow-hidden border border-dark hover:shadow-lg hover:shadow-purple-600/20 transition-all duration-300 group hover:border-purple-600/50">
-            <div className="aspect-square bg-gradient-to-br from-purple-600/20 to-purple-800/20 flex items-center justify-center group-hover:scale-105 transition-transform duration-300 border-b border-dark">
-              <Mic className="w-16 h-16 text-purple-400" />
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <h3 className="font-medium text-xl text-light">Vocal Harmony</h3>
-                <p className="text-muted-light font-light">by VoiceAngel</p>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-2xl font-medium text-light">4.1 SOL</span>
-                <span className="text-sm text-muted-light font-light">$295</span>
-              </div>
-              <button className="w-full accent-purple text-white py-3 rounded-2xl font-medium transition-all duration-200 hover:scale-105 shadow-lg shadow-purple-600/25">
-                Купить сейчас
-              </button>
-            </div>
-          </div>
-
-          {/* NFT карточка 6 */}
-          <div className="bg-dark-card rounded-3xl overflow-hidden border border-dark hover:shadow-lg hover:shadow-purple-600/20 transition-all duration-300 group hover:border-purple-600/50">
-            <div className="aspect-square bg-gradient-to-br from-purple-600/20 to-purple-800/20 flex items-center justify-center group-hover:scale-105 transition-transform duration-300 border-b border-dark">
-              <Volume2 className="w-16 h-16 text-purple-400" />
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <h3 className="font-medium text-xl text-light">Brass Section</h3>
-                <p className="text-muted-light font-light">by BrassKing</p>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-2xl font-medium text-light">1.5 SOL</span>
-                <span className="text-sm text-muted-light font-light">$108</span>
-              </div>
-              <button className="w-full accent-purple text-white py-3 rounded-2xl font-medium transition-all duration-200 hover:scale-105 shadow-lg shadow-purple-600/25">
-                Купить сейчас
-              </button>
-            </div>
+            )}
           </div>
         </div>
+        {!loading && nfts.length > 0 && (
+          <div className="text-center">
+            <button className="bg-dark-card hover:bg-purple-600/20 text-muted-light hover:text-light border border-dark hover:border-purple-600/50 px-10 py-4 rounded-2xl font-medium transition-all duration-200 hover:scale-105">
+              Загрузить еще
+            </button>
+          </div>
+        )}
 
-        <div className="text-center mt-16">
-          <button className="bg-dark-card hover:bg-purple-600/20 text-muted-light hover:text-light border border-dark hover:border-purple-600/50 px-10 py-4 rounded-2xl font-medium transition-all duration-200 hover:scale-105">
-            Загрузить еще
-          </button>
-        </div>
+        {/* Уведомления */}
+        <NotificationContainer 
+          notifications={notifications} 
+          onClose={removeNotification} 
+        />
       </div>
     </div>
   );

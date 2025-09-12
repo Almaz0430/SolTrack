@@ -1,0 +1,82 @@
+/* Стили для Solana Wallet Adapter */
+@import '@solana/wallet-adapter-react-ui/styles.css';
+
+/* Кастомизация стилей кнопки кошелька */
+.wallet-adapter-button {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.wallet-adapter-button:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+  transform: scale(1.02) !important;
+}
+
+.wallet-adapter-button:disabled {
+  background: #4b5563 !important;
+  opacity: 0.6 !important;
+  transform: none !important;
+}
+
+/* Стили для модального окна */
+.wallet-adapter-modal {
+  background: #1a1a1a !important;
+  border: 1px solid #374151 !important;
+  border-radius: 16px !important;
+}
+
+.wallet-adapter-modal-title {
+  color: #f3f4f6 !important;
+}
+
+.wallet-adapter-modal-list {
+  background: transparent !important;
+}
+
+.wallet-adapter-modal-list-item {
+  background: #262626 !important;
+  border: 1px solid #374151 !important;
+  border-radius: 12px !important;
+  margin-bottom: 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+.wallet-adapter-modal-list-item:hover {
+  background: #8b5cf6 !important;
+  border-color: #8b5cf6 !important;
+}
+
+.wallet-adapter-modal-list-item-name {
+  color: #f3f4f6 !important;
+}
+
+.wallet-adapter-modal-overlay {
+  background: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Стили для выпадающего меню кошелька */
+.wallet-adapter-dropdown {
+  background: #262626 !important;
+  border: 1px solid #374151 !important;
+  border-radius: 12px !important;
+}
+
+.wallet-adapter-dropdown-list-item {
+  color: #f3f4f6 !important;
+  transition: all 0.2s ease !important;
+}
+
+.wallet-adapter-dropdown-list-item:hover {
+  background: #8b5cf6 !important;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .wallet-adapter-button {
+    font-size: 14px !important;
+    padding: 8px 16px !important;
+  }
+}
