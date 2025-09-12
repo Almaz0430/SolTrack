@@ -1,4 +1,29 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+
 export default function MarketPage() {
+  const [selectedCategory, setSelectedCategory] = useState('Все категории');
+  const [selectedSort, setSelectedSort] = useState('Сортировка');
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
+
+  const categories = ['Все категории', 'Электронная музыка', 'Хип-хоп', 'Рок', 'Джаз'];
+  const sortOptions = ['Сортировка', 'По цене ↑', 'По цене ↓', 'По популярности', 'Новые'];
+
+  // Закрытие выпадающих списков при клике вне их
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setCategoryOpen(false);
+      setSortOpen(false);
+    };
+
+    if (categoryOpen || sortOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [categoryOpen, sortOpen]);
+
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16 lg:py-24">
@@ -11,22 +36,85 @@ export default function MarketPage() {
               Откройте для себя и торгуйте уникальными музыкальными NFT
             </p>
           </div>
-          
+
           <div className="flex flex-col sm:flex-row gap-4">
-            <select className="border border-gray-200 rounded-2xl px-6 py-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent font-light text-gray-700">
-              <option>Все категории</option>
-              <option>Электронная музыка</option>
-              <option>Хип-хоп</option>
-              <option>Рок</option>
-              <option>Джаз</option>
-            </select>
-            <select className="border border-gray-200 rounded-2xl px-6 py-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent font-light text-gray-700">
-              <option>Сортировка</option>
-              <option>По цене ↑</option>
-              <option>По цене ↓</option>
-              <option>По популярности</option>
-              <option>Новые</option>
-            </select>
+            {/* Категории */}
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => {
+                  setCategoryOpen(!categoryOpen);
+                  setSortOpen(false);
+                }}
+                className="w-full sm:w-auto min-w-[200px] bg-white border border-gray-200 rounded-2xl px-6 py-4 text-left font-light text-gray-700 hover:border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 flex items-center justify-between"
+              >
+                <span>{selectedCategory}</span>
+                <svg
+                  className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${categoryOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {categoryOpen && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-lg z-10 overflow-hidden">
+                  {categories.map((category) => (
+                    <button
+                      key={category}
+                      onClick={() => {
+                        setSelectedCategory(category);
+                        setCategoryOpen(false);
+                      }}
+                      className={`w-full px-6 py-4 text-left font-light hover:bg-gray-50 transition-colors ${selectedCategory === category ? 'text-blue-600 bg-blue-50' : 'text-gray-700'
+                        }`}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Сортировка */}
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => {
+                  setSortOpen(!sortOpen);
+                  setCategoryOpen(false);
+                }}
+                className="w-full sm:w-auto min-w-[180px] bg-white border border-gray-200 rounded-2xl px-6 py-4 text-left font-light text-gray-700 hover:border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 flex items-center justify-between"
+              >
+                <span>{selectedSort}</span>
+                <svg
+                  className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${sortOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {sortOpen && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-lg z-10 overflow-hidden">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={option}
+                      onClick={() => {
+                        setSelectedSort(option);
+                        setSortOpen(false);
+                      }}
+                      className={`w-full px-6 py-4 text-left font-light hover:bg-gray-50 transition-colors ${selectedSort === option ? 'text-blue-600 bg-blue-50' : 'text-gray-700'
+                        }`}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
