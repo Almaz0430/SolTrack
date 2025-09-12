@@ -2,7 +2,11 @@
 
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
+import { 
+  PhantomWalletAdapter,
+  SolflareWalletAdapter,
+  WalletConnectWalletAdapter 
+} from '@solana/wallet-adapter-wallets';
 import { useMemo } from 'react';
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -14,6 +18,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const wallets = useMemo(
     () => [
       new PhantomWalletAdapter(),
+      new SolflareWalletAdapter(),
+      new WalletConnectWalletAdapter({
+        network: 'devnet',
+        options: {
+          projectId: 'your-project-id', // Замените на ваш WalletConnect Project ID
+        },
+      }),
     ],
     []
   );

@@ -32,7 +32,7 @@ export default function RootLayout({
       >
         <WalletContextProvider>
           <Header />
-          <main className="min-h-screen">
+          <main>
             {children}
           </main>
         </WalletContextProvider>
