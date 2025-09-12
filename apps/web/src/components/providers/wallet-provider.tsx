@@ -7,7 +7,8 @@ import {
   SolflareWalletAdapter,
   WalletConnectWalletAdapter 
 } from '@solana/wallet-adapter-wallets';
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
+import { SolanaService } from '@/lib/solana';
 
 export function WalletContextProvider({ children }: { children: React.ReactNode }) {
   const endpoint = useMemo(
@@ -28,6 +29,11 @@ export function WalletContextProvider({ children }: { children: React.ReactNode 
     ],
     []
   );
+
+  // Инициализируем Solana сервис при загрузке
+  useEffect(() => {
+    SolanaService.initialize(endpoint);
+  }, [endpoint]);
 
   return (
     <ConnectionProvider endpoint={endpoint}>
