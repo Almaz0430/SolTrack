@@ -43,6 +43,46 @@ function App() {
 }
 ```
 
+## 🎯 Новые возможности с системой роялти
+
+### Создание NFT с роялти:
+
+```javascript
+const nftData = {
+  title: "My Track",
+  symbol: "MUS",
+  uri: "ipfs://QmFakeMetaUri",
+  genre: "Electronic",
+  price: 0.1, // 0.1 SOL
+  bpm: 128,
+  key: "C Major",
+  artistRoyalty: 500, // 5% роялти (500 базисных пунктов)
+  platformWallet: "PLATFORM_WALLET_ADDRESS" // Кошелек площадки
+};
+
+const result = await createNFT(nftData);
+```
+
+### Покупка NFT с автоматическим распределением платежей:
+
+```javascript
+const signature = await buyNFT(
+  nftDataPda,
+  sellerTokenAccount,
+  artistWallet,    // Кошелек артиста для роялти
+  platformWallet   // Кошелек площадки для комиссии
+);
+```
+
+### Изменение роялти (только для владельца):
+
+```javascript
+const signature = await updateRoyalty(
+  nftDataPda,
+  1000 // 10% роялти (1000 базисных пунктов)
+);
+```
+
 ## 🛠️ Готовые компоненты
 
 ### Используйте готовые файлы:
