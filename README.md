@@ -305,7 +305,7 @@ anchor deploy --provider.cluster mainnet-beta
 - **GitHub**: [@Wolfhound787](https://github.com/Wolfhound787)
 - **Роль**: Смарт-контракт, система роялти, интеграция с Solana
 
-**Frontend разработчик (React/Web3):**
+**Frontend разработчик (Next/Web3):**
 - **GitHub**: [@Almaz0430](https://github.com/Almaz0430)  
 - **Роль**: UI/UX, интеграция с кошельками, компоненты маркетплейса
 
