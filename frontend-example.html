@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music NFT Marketplace</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .file-input {
+            padding: 10px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        
+        .file-input:hover {
+            border-color: #667eea;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .nft-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .nft-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .nft-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .nft-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .nft-info {
+            padding: 20px;
+        }
+        
+        .nft-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .nft-details {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .nft-price {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .buy-btn {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+        }
+        
+        .buy-btn:hover {
+            background: #218838;
+        }
+        
+        .wallet-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .connect-wallet {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 Music NFT Marketplace</h1>
+            <p>Создавайте, продавайте и покупайте музыкальные NFT</p>
+        </div>
+
+        <!-- Информация о кошельке -->
+        <div class="wallet-info">
+            <div id="wallet-status">Кошелек не подключен</div>
+            <button id="connect-wallet" class="connect-wallet">Подключить кошелек</button>
+        </div>
+
+        <!-- Форма создания NFT -->
+        <div class="form-container">
+            <h2>Создать музыкальный NFT</h2>
+            <form id="create-nft-form">
+                <div class="form-group">
+                    <label for="title">Название трека/альбома:</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Описание:</label>
+                    <textarea id="description" name="description" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="genre">Жанр:</label>
+                    <select id="genre" name="genre" required>
+                        <option value="">Выберите жанр</option>
+                        <option value="Electronic">Electronic</option>
+                        <option value="Rock">Rock</option>
+                        <option value="Hip-Hop">Hip-Hop</option>
+                        <option value="Jazz">Jazz</option>
+                        <option value="Classical">Classical</option>
+                        <option value="Pop">Pop</option>
+                        <option value="Blues">Blues</option>
+                        <option value="Country">Country</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="bpm">BPM:</label>
+                    <input type="number" id="bpm" name="bpm" min="60" max="200" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="key">Тональность:</label>
+                    <select id="key" name="key" required>
+                        <option value="">Выберите тональность</option>
+                        <option value="C Major">C Major</option>
+                        <option value="C Minor">C Minor</option>
+                        <option value="D Major">D Major</option>
+                        <option value="D Minor">D Minor</option>
+                        <option value="E Major">E Major</option>
+                        <option value="E Minor">E Minor</option>
+                        <option value="F Major">F Major</option>
+                        <option value="F Minor">F Minor</option>
+                        <option value="G Major">G Major</option>
+                        <option value="G Minor">G Minor</option>
+                        <option value="A Major">A Major</option>
+                        <option value="A Minor">A Minor</option>
+                        <option value="B Major">B Major</option>
+                        <option value="B Minor">B Minor</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="price">Цена (SOL):</label>
+                    <input type="number" id="price" name="price" step="0.01" min="0" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cover-image">Обложка:</label>
+                    <div class="file-input" onclick="document.getElementById('cover-image').click()">
+                        <input type="file" id="cover-image" name="cover-image" accept="image/*" style="display: none;">
+                        <span id="cover-image-text">Нажмите для загрузки обложки</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="audio-file">Аудио файл:</label>
+                    <div class="file-input" onclick="document.getElementById('audio-file').click()">
+                        <input type="file" id="audio-file" name="audio-file" accept="audio/*" style="display: none;">
+                        <span id="audio-file-text">Нажмите для загрузки аудио файла</span>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn">Загрузить и Минтить NFT</button>
+            </form>
+        </div>
+
+        <!-- Сетка NFT -->
+        <div class="nft-grid" id="nft-grid">
+            <!-- NFT карточки будут добавлены динамически -->
+        </div>
+    </div>
+
+    <script>
+        // Пример данных NFT (в реальном приложении будут загружаться с блокчейна)
+        const sampleNFTs = [
+            {
+                id: 1,
+                title: "Electronic Dreams",
+                genre: "Electronic",
+                bpm: 128,
+                key: "C Major",
+                price: 0.5,
+                image: "https://via.placeholder.com/300x200/667eea/ffffff?text=Electronic+Dreams",
+                owner: "0x123...abc"
+            },
+            {
+                id: 2,
+                title: "Rock Anthem",
+                genre: "Rock",
+                bpm: 140,
+                key: "G Major",
+                price: 1.2,
+                image: "https://via.placeholder.com/300x200/764ba2/ffffff?text=Rock+Anthem",
+                owner: "0x456...def"
+            }
+        ];
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNFTs();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Обработка формы создания NFT
+            document.getElementById('create-nft-form').addEventListener('submit', handleCreateNFT);
+            
+            // Обработка загрузки файлов
+            document.getElementById('cover-image').addEventListener('change', handleFileSelect);
+            document.getElementById('audio-file').addEventListener('change', handleFileSelect);
+            
+            // Подключение кошелька
+            document.getElementById('connect-wallet').addEventListener('click', connectWallet);
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            const textElement = document.getElementById(event.target.id + '-text');
+            
+            if (file) {
+                textElement.textContent = `Выбран файл: ${file.name}`;
+            }
+        }
+
+        function handleCreateNFT(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const nftData = {
+                title: formData.get('title'),
+                description: formData.get('description'),
+                genre: formData.get('genre'),
+                bpm: parseInt(formData.get('bpm')),
+                key: formData.get('key'),
+                price: parseFloat(formData.get('price')),
+                coverImage: formData.get('cover-image'),
+                audioFile: formData.get('audio-file')
+            };
+
+            console.log('Создание NFT:', nftData);
+            
+            // Здесь будет логика:
+            // 1. Загрузка файлов в IPFS
+            // 2. Создание metadata.json
+            // 3. Вызов смарт-контракта для минта NFT
+            
+            alert('NFT создан! (В реальном приложении здесь будет вызов смарт-контракта)');
+            loadNFTs(); // Обновляем список
+        }
+
+        function loadNFTs() {
+            const grid = document.getElementById('nft-grid');
+            grid.innerHTML = '';
+
+            sampleNFTs.forEach(nft => {
+                const card = createNFTCard(nft);
+                grid.appendChild(card);
+            });
+        }
+
+        function createNFTCard(nft) {
+            const card = document.createElement('div');
+            card.className = 'nft-card';
+            
+            card.innerHTML = `
+                <img src="${nft.image}" alt="${nft.title}" class="nft-image">
+                <div class="nft-info">
+                    <div class="nft-title">${nft.title}</div>
+                    <div class="nft-details">
+                        <div>Жанр: ${nft.genre}</div>
+                        <div>BPM: ${nft.bpm}</div>
+                        <div>Тональность: ${nft.key}</div>
+                    </div>
+                    <div class="nft-price">${nft.price} SOL</div>
+                    <button class="buy-btn" onclick="buyNFT(${nft.id})">Купить</button>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function buyNFT(nftId) {
+            const nft = sampleNFTs.find(n => n.id === nftId);
+            if (nft) {
+                console.log('Покупка NFT:', nft);
+                // Здесь будет логика:
+                // 1. Открытие модалки кошелька
+                // 2. Отправка транзакции покупки
+                // 3. Обновление состояния
+                
+                alert(`Покупка NFT "${nft.title}" за ${nft.price} SOL! (В реальном приложении здесь будет вызов смарт-контракта)`);
+            }
+        }
+
+        function connectWallet() {
+            // Здесь будет логика подключения кошелька (Phantom, Solflare и т.д.)
+            console.log('Подключение кошелька...');
+            document.getElementById('wallet-status').textContent = 'Кошелек подключен: 0x123...abc';
+            document.getElementById('connect-wallet').textContent = 'Отключить кошелек';
+        }
+    </script>
+</body>
+</html>
