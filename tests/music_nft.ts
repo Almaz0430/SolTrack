@@ -18,29 +18,7 @@ describe("music_nft", () => {
   it("Минт музыкального NFT", async () => {
     const mint = anchor.web3.Keypair.generate();
 
-    // PDA для metadata
-    const METADATA_PROGRAM_ID = new PublicKey(
-      "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
-    );
-    const [metadataPda] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from("metadata"),
-        METADATA_PROGRAM_ID.toBuffer(),
-        mint.publicKey.toBuffer(),
-      ],
-      METADATA_PROGRAM_ID
-    );
-
-    // PDA для master edition
-    const [masterEditionPda] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from("metadata"),
-        METADATA_PROGRAM_ID.toBuffer(),
-        mint.publicKey.toBuffer(),
-        Buffer.from("edition"),
-      ],
-      METADATA_PROGRAM_ID
-    );
+    // Упрощенная версия без Metaplex
 
     // Создаем mint-аккаунт
     const lamportsForMint = await provider.connection.getMinimumBalanceForRentExemption(82);
@@ -76,7 +54,7 @@ describe("music_nft", () => {
     );
     await provider.sendAndConfirm(createAtaTx);
 
-    // RPC вызов Anchor с корректными PDAs
+    // RPC вызов Anchor с упрощенными аккаунтами
     await program.methods
       .createMusicNft(
         "My Track",           // title
@@ -88,12 +66,8 @@ describe("music_nft", () => {
         payer: wallet.publicKey,
         mint: mint.publicKey,
         tokenAccount: tokenAccount,
-        metadata: metadataPda,
-        masterEdition: masterEditionPda,
-        tokenMetadataProgram: METADATA_PROGRAM_ID,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
-        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       })
       .rpc();
 
