@@ -4,6 +4,7 @@ import {
   useCreateMusicNFT, 
   useBuyMusicNFT, 
   useUpdateNFTPrice,
+  useUpdateArtistRoyalty,
   useAvailableNFTs,
   useUserNFTs,
   utils
@@ -20,7 +21,8 @@ export function CreateNFTForm() {
     genre: '',
     price: 0,
     bpm: 120,
-    key: 'C Major'
+    key: 'C Major',
+    artistRoyalty: 500 // 5% по умолчанию
   });
 
   const handleSubmit = async (e) => {
@@ -37,7 +39,8 @@ export function CreateNFTForm() {
         genre: '',
         price: 0,
         bpm: 120,
-        key: 'C Major'
+        key: 'C Major',
+        artistRoyalty: 500
       });
     } catch (error) {
       alert('Ошибка создания NFT: ' + error.message);
@@ -153,6 +156,21 @@ export function CreateNFTForm() {
           </select>
         </div>
 
+        <div className="form-group">
+          <label>Роялти артиста (%):</label>
+          <input
+            type="number"
+            value={formData.artistRoyalty / 100}
+            onChange={(e) => setFormData({...formData, artistRoyalty: parseInt(e.target.value) * 100})}
+            min="0"
+            max="50"
+            step="0.1"
+            placeholder="5.0"
+            required
+          />
+          <small>Максимум 50% (5000 базисных пунктов)</small>
+        </div>
+
         <button type="submit" disabled={loading} className="submit-btn">
           {loading ? 'Создание...' : 'Создать NFT'}
         </button>
@@ -164,8 +182,11 @@ export function CreateNFTForm() {
 // Компонент для отображения NFT карточки
 export function NFTCard({ nft, onBuy, onUpdatePrice, isOwner = false }) {
   const [newPrice, setNewPrice] = useState('');
+  const [newRoyalty, setNewRoyalty] = useState('');
   const [showUpdateForm, setShowUpdateForm] = useState(false);
+  const [showRoyaltyForm, setShowRoyaltyForm] = useState(false);
   const { updatePrice, loading: updating } = useUpdateNFTPrice();
+  const { updateRoyalty, loading: updatingRoyalty } = useUpdateArtistRoyalty();
 
   const handleUpdatePrice = async () => {
     if (!newPrice) return;
@@ -176,6 +197,18 @@ export function NFTCard({ nft, onBuy, onUpdatePrice, isOwner = false }) {
       setNewPrice('');
     } catch (error) {
       alert('Ошибка обновления цены: ' + error.message);
+    }
+  };
+
+  const handleUpdateRoyalty = async () => {
+    if (!newRoyalty) return;
+    try {
+      await updateRoyalty(nft.nftDataPda, parseInt(newRoyalty) * 100);
+      alert('Роялти обновлено!');
+      setShowRoyaltyForm(false);
+      setNewRoyalty('');
+    } catch (error) {
+      alert('Ошибка обновления роялти: ' + error.message);
     }
   };
 
@@ -197,14 +230,16 @@ export function NFTCard({ nft, onBuy, onUpdatePrice, isOwner = false }) {
           <p><strong>BPM:</strong> {nft.nftData.bpm}</p>
           <p><strong>Тональность:</strong> {nft.nftData.key}</p>
           <p><strong>Цена:</strong> {utils.formatPrice(nft.nftData.price)}</p>
+          <p><strong>Роялти артиста:</strong> {(nft.nftData.artistRoyalty / 100).toFixed(1)}%</p>
+          <p><strong>Комиссия площадки:</strong> {(nft.nftData.platformFee / 100).toFixed(1)}%</p>
           <p><strong>Статус:</strong> {nft.nftData.isForSale ? 'В продаже' : 'Продано'}</p>
         </div>
 
         <div className="nft-actions">
           {isOwner ? (
-            <div>
+            <div className="owner-actions">
               {showUpdateForm ? (
-                <div className="update-price-form">
+                <div className="update-form">
                   <input
                     type="number"
                     value={newPrice}
@@ -214,16 +249,39 @@ export function NFTCard({ nft, onBuy, onUpdatePrice, isOwner = false }) {
                     min="0"
                   />
                   <button onClick={handleUpdatePrice} disabled={updating}>
-                    {updating ? 'Обновление...' : 'Обновить'}
+                    {updating ? 'Обновление...' : 'Обновить цену'}
                   </button>
                   <button onClick={() => setShowUpdateForm(false)}>
                     Отмена
                   </button>
                 </div>
+              ) : showRoyaltyForm ? (
+                <div className="update-form">
+                  <input
+                    type="number"
+                    value={newRoyalty}
+                    onChange={(e) => setNewRoyalty(e.target.value)}
+                    placeholder="Новое роялти в %"
+                    step="0.1"
+                    min="0"
+                    max="50"
+                  />
+                  <button onClick={handleUpdateRoyalty} disabled={updatingRoyalty}>
+                    {updatingRoyalty ? 'Обновление...' : 'Обновить роялти'}
+                  </button>
+                  <button onClick={() => setShowRoyaltyForm(false)}>
+                    Отмена
+                  </button>
+                </div>
               ) : (
-                <button onClick={() => setShowUpdateForm(true)}>
-                  Изменить цену
-                </button>
+                <div className="action-buttons">
+                  <button onClick={() => setShowUpdateForm(true)}>
+                    Изменить цену
+                  </button>
+                  <button onClick={() => setShowRoyaltyForm(true)}>
+                    Изменить роялти
+                  </button>
+                </div>
               )}
             </div>
           ) : (
@@ -521,24 +579,51 @@ export const styles = `
   cursor: not-allowed;
 }
 
-.update-price-form {
+.update-form {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.update-price-form input {
+.update-form input {
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
 
-.update-price-form button {
+.update-form button {
   padding: 8px 12px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
+}
+
+.owner-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.action-buttons button {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #667eea;
+  background: white;
+  color: #667eea;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.action-buttons button:hover {
+  background: #667eea;
+  color: white;
 }
 
 .loading {

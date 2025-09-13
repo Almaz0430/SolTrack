@@ -69,7 +69,8 @@ describe("music_nft", () => {
         "Electronic",                  // genre
         new anchor.BN(1000000000),     // price в lamports (1 SOL)
         128,                           // bpm
-        "C Major"                      // key
+        "C Major",                     // key
+        500                            // artist_royalty в базисных пунктах (5%)
       )
       .accounts({
         authority: wallet.publicKey,
@@ -77,6 +78,7 @@ describe("music_nft", () => {
         mint: mint.publicKey,
         tokenAccount: tokenAccount,
         nftData: nftDataPda,
+        platformWallet: wallet.publicKey, // Используем тот же кошелек для тестов
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })
@@ -172,7 +174,8 @@ describe("music_nft", () => {
         "Rock",
         new anchor.BN(500000000), // 0.5 SOL
         140,
-        "G Major"
+        "G Major",
+        300 // 3% роялти артиста
       )
       .accounts({
         authority: wallet.publicKey,
@@ -180,6 +183,7 @@ describe("music_nft", () => {
         mint: mint.publicKey,
         tokenAccount: sellerTokenAccount,
         nftData: nftDataPda,
+        platformWallet: wallet.publicKey,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })
@@ -194,6 +198,8 @@ describe("music_nft", () => {
         sellerTokenAccount: sellerTokenAccount,
         buyerTokenAccount: buyerTokenAccount,
         nftData: nftDataPda,
+        artistWallet: wallet.publicKey, // Кошелек артиста для роялти
+        platformWallet: wallet.publicKey, // Кошелек площадки для комиссии
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })

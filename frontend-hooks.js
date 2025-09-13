@@ -98,7 +98,8 @@ export function useCreateMusicNFT() {
           nftData.genre,
           new anchor.BN(nftData.price * 1e9), // цена в lamports
           nftData.bpm,
-          nftData.key
+          nftData.key,
+          nftData.artistRoyalty || 500 // роялти артиста в базисных пунктах (по умолчанию 5%)
         )
         .accounts({
           authority: publicKey,
@@ -106,6 +107,7 @@ export function useCreateMusicNFT() {
           mint: mint.publicKey,
           tokenAccount: tokenAccount,
           nftData: nftDataPda,
+          platformWallet: nftData.platformWallet || publicKey, // кошелек площадки
           tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
         })
@@ -142,7 +144,7 @@ export function useBuyMusicNFT() {
   const { publicKey, signTransaction } = useWallet();
   const [loading, setLoading] = useState(false);
 
-  const buyNFT = useCallback(async (nftDataPda, sellerTokenAccount) => {
+  const buyNFT = useCallback(async (nftDataPda, sellerTokenAccount, artistWallet, platformWallet) => {
     if (!publicKey || !signTransaction) {
       throw new Error('Кошелек не подключен');
     }
@@ -184,6 +186,8 @@ export function useBuyMusicNFT() {
           sellerTokenAccount: sellerTokenAccount,
           buyerTokenAccount: buyerTokenAccount,
           nftData: nftDataPda,
+          artistWallet: artistWallet || nftData.owner, // кошелек артиста для роялти
+          platformWallet: platformWallet || nftData.platformWallet, // кошелек площадки
           tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
         })
@@ -235,6 +239,41 @@ export function useUpdateNFTPrice() {
   }, [publicKey, signTransaction]);
 
   return { updatePrice, loading };
+}
+
+// Хук для изменения роялти артиста
+export function useUpdateArtistRoyalty() {
+  const { publicKey, signTransaction } = useWallet();
+  const [loading, setLoading] = useState(false);
+
+  const updateRoyalty = useCallback(async (nftDataPda, newRoyalty) => {
+    if (!publicKey || !signTransaction) {
+      throw new Error('Кошелек не подключен');
+    }
+
+    setLoading(true);
+    try {
+      const program = createProgram({ publicKey, signTransaction });
+      
+      const signature = await program.methods
+        .updateArtistRoyalty(newRoyalty)
+        .accounts({
+          authority: publicKey,
+          nftData: nftDataPda,
+        })
+        .rpc();
+
+      return signature;
+
+    } catch (error) {
+      console.error('Ошибка изменения роялти:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [publicKey, signTransaction]);
+
+  return { updateRoyalty, loading };
 }
 
 // Хук для получения NFT пользователя

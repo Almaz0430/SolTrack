@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Mint, Token, TokenAccount, MintTo, Transfer};
+use anchor_spl::token::{self, Token, TokenAccount, MintTo, Transfer};
+use anchor_spl::metadata::{self, Metadata, MetadataAccount};
 
 declare_id!("9ysQaigie6LHeqMEWGMWBYkdXFg4zyHhBnxzmZdMzG7T");
 
@@ -16,6 +17,7 @@ pub mod music_nft {
         price: u64, // цена в lamports (1 SOL = 1_000_000_000 lamports)
         bpm: u16,
         key: String,
+        artist_royalty: u16, // роялти артиста в базисных пунктах (100 = 1%)
     ) -> Result<()> {
         // Инициализируем NFT данные
         let nft_data = &mut ctx.accounts.nft_data;
@@ -31,10 +33,14 @@ pub mod music_nft {
         nft_data.amount = 1; // Количество доступных копий
         nft_data.amount_sold = 0;
         nft_data.is_for_sale = true;
+        nft_data.artist_royalty = artist_royalty;
+        nft_data.platform_fee = 500; // 5% комиссия площадки
+        nft_data.platform_wallet = ctx.accounts.platform_wallet.key();
 
         msg!("Creating music NFT: {} ({})", title, symbol);
         msg!("Genre: {}, Price: {} lamports, BPM: {}, Key: {}", genre, price, bpm, key);
         msg!("Metadata URI: {}", uri);
+        msg!("Artist Royalty: {} basis points", artist_royalty);
 
         // ----------------------------
         // Минтим 1 NFT в токен аккаунт владельца
@@ -49,7 +55,7 @@ pub mod music_nft {
         );
         token::mint_to(cpi_ctx, 1)?;
 
-        msg!("✅ Music NFT minted successfully!");
+        msg!("✅ Music NFT with royalty system minted successfully!");
 
         Ok(())
     }
@@ -81,16 +87,48 @@ pub mod music_nft {
             nft_data.is_for_sale = false;
         }
 
-        // Переводим SOL продавцу через System Program
-        let transfer_instruction = anchor_lang::system_program::Transfer {
+        // Рассчитываем роялти и комиссии
+        let total_price = nft_data.price;
+        let artist_royalty_amount = (total_price * nft_data.artist_royalty as u64) / 10000;
+        let platform_fee_amount = (total_price * nft_data.platform_fee as u64) / 10000;
+        let seller_amount = total_price - artist_royalty_amount - platform_fee_amount;
+
+        // Переводим SOL продавцу
+        let transfer_to_seller = anchor_lang::system_program::Transfer {
             from: ctx.accounts.buyer.to_account_info(),
             to: ctx.accounts.seller_authority.to_account_info(),
         };
-        let cpi_ctx = CpiContext::new(
+        let cpi_ctx_seller = CpiContext::new(
             ctx.accounts.system_program.to_account_info(),
-            transfer_instruction,
+            transfer_to_seller,
         );
-        anchor_lang::system_program::transfer(cpi_ctx, nft_data.price)?;
+        anchor_lang::system_program::transfer(cpi_ctx_seller, seller_amount)?;
+
+        // Переводим роялти артисту (если есть)
+        if artist_royalty_amount > 0 {
+            let transfer_to_artist = anchor_lang::system_program::Transfer {
+                from: ctx.accounts.buyer.to_account_info(),
+                to: ctx.accounts.artist_wallet.to_account_info(),
+            };
+            let cpi_ctx_artist = CpiContext::new(
+                ctx.accounts.system_program.to_account_info(),
+                transfer_to_artist,
+            );
+            anchor_lang::system_program::transfer(cpi_ctx_artist, artist_royalty_amount)?;
+        }
+
+        // Переводим комиссию площадке
+        if platform_fee_amount > 0 {
+            let transfer_to_platform = anchor_lang::system_program::Transfer {
+                from: ctx.accounts.buyer.to_account_info(),
+                to: ctx.accounts.platform_wallet.to_account_info(),
+            };
+            let cpi_ctx_platform = CpiContext::new(
+                ctx.accounts.system_program.to_account_info(),
+                transfer_to_platform,
+            );
+            anchor_lang::system_program::transfer(cpi_ctx_platform, platform_fee_amount)?;
+        }
 
         msg!("✅ Music NFT purchased successfully! Price: {} lamports", nft_data.price);
 
@@ -106,6 +144,22 @@ pub mod music_nft {
         nft_data.price = new_price;
         
         msg!("✅ NFT price updated to: {} lamports", new_price);
+        
+        Ok(())
+    }
+
+    pub fn update_artist_royalty(ctx: Context<UpdateNftPrice>, new_royalty: u16) -> Result<()> {
+        let nft_data = &mut ctx.accounts.nft_data;
+        
+        // Проверяем, что только владелец может изменить роялти
+        require!(nft_data.owner == ctx.accounts.authority.key(), ErrorCode::Unauthorized);
+        
+        // Проверяем, что роялти не превышает 50% (5000 базисных пунктов)
+        require!(new_royalty <= 5000, ErrorCode::InvalidRoyalty);
+        
+        nft_data.artist_royalty = new_royalty;
+        
+        msg!("✅ Artist royalty updated to: {} basis points", new_royalty);
         
         Ok(())
     }
@@ -126,6 +180,9 @@ pub struct MusicNftData {
     pub amount: u32,             // Общее количество копий
     pub amount_sold: u32,        // Количество проданных копий
     pub is_for_sale: bool,       // Продается ли NFT
+    pub artist_royalty: u16,     // Роялти артиста в базисных пунктах (100 = 1%)
+    pub platform_fee: u16,       // Комиссия площадки в базисных пунктах (500 = 5%)
+    pub platform_wallet: Pubkey, // Кошелек площадки для получения комиссии
 }
 
 #[derive(Accounts)]
@@ -143,11 +200,14 @@ pub struct CreateMusicNft<'info> {
     #[account(
         init,
         payer = payer,
-        space = 8 + 32 + 32 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 1 + 32 + 32 + 4 + 4 + 1,
+        space = 8 + 32 + 32 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 1 + 32 + 32 + 4 + 4 + 1 + 2 + 2 + 32,
         seeds = [b"music_nft", mint.key().as_ref()],
         bump
     )]
     pub nft_data: Account<'info, MusicNftData>,
+
+    /// CHECK: Platform wallet for fees
+    pub platform_wallet: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -170,6 +230,12 @@ pub struct BuyMusicNft<'info> {
         bump
     )]
     pub nft_data: Account<'info, MusicNftData>,
+
+    /// CHECK: Artist wallet for royalties
+    pub artist_wallet: UncheckedAccount<'info>,
+    
+    /// CHECK: Platform wallet for fees
+    pub platform_wallet: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -198,4 +264,6 @@ pub enum ErrorCode {
     InsufficientFunds,
     #[msg("Unauthorized")]
     Unauthorized,
+    #[msg("Invalid royalty percentage")]
+    InvalidRoyalty,
 }
