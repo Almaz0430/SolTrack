@@ -6,13 +6,16 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-music_nft = "prTa5Rvsbrnc3CYU3ZH3tnmMMwRij1grD142T5ZAhtt"
+music_nft = "9ysQaigie6LHeqMEWGMWBYkdXFg4zyHhBnxzmZdMzG7T"
 
 [registry]
+programs = [
+  { name = "music_nft", keypair = "./keys/music_nft-keypair.json" }
+]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "http://127.0.0.1:8899"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
