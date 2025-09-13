@@ -7,20 +7,12 @@ WORKDIR /app
 # Install pnpm
 RUN npm install -g pnpm
 
-# Copy the root package.json and pnpm-lock.yaml
-COPY package.json pnpm-lock.yaml ./
-
-# Copy pnpm-workspace.yaml
-COPY pnpm-workspace.yaml ./
-
-# Install all dependencies
-RUN pnpm install
-
-# Copy the rest of the monorepo source code
+# Copy all the source files
 COPY . .
 
-# Set the build environment to production
-ENV NODE_ENV=production
+# Install all dependencies from all workspaces
+# We need dev dependencies like `prisma` for the build step
+RUN pnpm install
 
 # Generate Prisma Client
 RUN pnpm --filter web prisma generate
@@ -30,6 +22,9 @@ RUN pnpm --filter web build
 
 # Expose the port the app runs on
 EXPOSE 3000
+
+# Set the environment to production for the runtime
+ENV NODE_ENV=production
 
 # Define the command to run the app
 CMD ["pnpm", "--filter", "web", "start"]
