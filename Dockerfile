@@ -29,6 +29,9 @@ EXPOSE 3000
 # Set the environment to production for the runtime
 ENV NODE_ENV=production
 
+# Make the start script executable
+RUN chmod +x apps/web/start.sh
+
 # Define the command to run the app
 # Run migrations and then start the application
-CMD ["sh", "-c", "pnpm --filter web prisma migrate deploy && pnpm --filter web start"]
+CMD ["./apps/web/start.sh"]
