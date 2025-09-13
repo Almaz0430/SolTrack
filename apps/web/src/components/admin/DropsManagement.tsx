@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Plus, 
   Edit, 
@@ -16,11 +17,11 @@ import { dropsApi, showNotification, formatters } from '@/lib/api';
 import { Drop } from '@prisma/client';
 
 export function DropsManagement() {
+  const router = useRouter();
   const [drops, setDrops] = useState<Drop[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedDrop, setSelectedDrop] = useState<Drop | null>(null);
 
   // Загрузка дропов
@@ -147,7 +148,7 @@ export function DropsManagement() {
           <p className="text-muted-light">Создавайте и управляйте NFT дропами</p>
         </div>
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={() => router.push('/admin/create-drop')}
           className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-xl font-medium transition-colors"
         >
           <Plus className="w-4 h-4" />
@@ -252,7 +253,7 @@ export function DropsManagement() {
                   <td className="py-4 px-6">
                     <div className="flex items-center justify-end gap-2">
                       <button
-                        onClick={() => setSelectedDrop(drop)}
+                        onClick={() => {/* Logic for viewing drop details */}}
                         className="p-2 hover:bg-purple-600/20 rounded-lg transition-colors"
                         title="Просмотр"
                       >
@@ -280,7 +281,7 @@ export function DropsManagement() {
                       )}
                       
                       <button
-                        onClick={() => setSelectedDrop(drop)}
+                        onClick={() => {/* Logic for editing drop */}}
                         className="p-2 hover:bg-purple-600/20 rounded-lg transition-colors"
                         title="Редактировать"
                       >
@@ -309,216 +310,6 @@ export function DropsManagement() {
             <p className="text-muted-light">Дропы не найдены</p>
           </div>
         )}
-      </div>
-
-      {/* Модальное окно создания/редактирования дропа */}
-      {(showCreateModal || selectedDrop) && (
-        <CreateDropModal
-          drop={selectedDrop}
-          onClose={() => {
-            setShowCreateModal(false);
-            setSelectedDrop(null);
-          }}
-          onSave={async (dropData) => {
-            try {
-              if (selectedDrop) {
-                // Обновление существующего дропа
-                const response = await dropsApi.update(selectedDrop.id, dropData);
-                if (response.success) {
-                  showNotification('Дроп успешно обновлен');
-                  loadDrops();
-                } else {
-                  showNotification(response.error || 'Ошибка обновления дропа', 'error');
-                  return;
-                }
-              } else {
-                // Создание нового дропа
-                const response = await dropsApi.create(dropData);
-                if (response.success) {
-                  showNotification('Дроп успешно создан');
-                  loadDrops();
-                } else {
-                  showNotification(response.error || 'Ошибка создания дропа', 'error');
-                  return;
-                }
-              }
-              setShowCreateModal(false);
-              setSelectedDrop(null);
-            } catch (error) {
-              showNotification('Ошибка сохранения дропа', 'error');
-            }
-          }}
-        />
-      )}
-    </div>
-  );
-}
-
-// Компонент модального окна для создания/редактирования дропа
-function CreateDropModal({ 
-  drop, 
-  onClose, 
-  onSave 
-}: { 
-  drop: Drop | null; 
-  onClose: () => void; 
-  onSave: (data: any) => Promise<void>; 
-}) {
-  const [formData, setFormData] = useState({
-    name: drop?.name || '',
-    artist: drop?.artist || '',
-    price: drop?.price || '',
-    totalSupply: drop?.totalSupply || 100,
-    artistRoyalty: drop?.artistRoyalty || '90.00',
-    platformFee: drop?.platformFee || '10.00',
-    description: drop?.description || '',
-    imageUrl: drop?.imageUrl || '',
-    musicUrl: drop?.musicUrl || '',
-  });
-
-  const [saving, setSaving] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      await onSave(formData);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-dark-card border border-dark rounded-2xl p-6 w-full max-w-md">
-        <h3 className="text-xl font-semibold text-light mb-6">
-          {drop ? 'Редактировать дроп' : 'Создать новый дроп'}
-        </h3>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-muted-light text-sm mb-2">Название</label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              className="w-full px-4 py-3 bg-dark border border-dark rounded-xl text-light focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-muted-light text-sm mb-2">Артист</label>
-            <input
-              type="text"
-              value={formData.artist}
-              onChange={(e) => setFormData(prev => ({ ...prev, artist: e.target.value }))}
-              className="w-full px-4 py-3 bg-dark border border-dark rounded-xl text-light focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              required
-            />
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-muted-light text-sm mb-2">Цена (SOL)</label>
-              <input
-                type="number"
-                step="0.0001"
-                value={formData.price}
-                onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                className="w-full px-4 py-3 bg-dark border border-dark rounded-xl text-light focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="block text-muted-light text-sm mb-2">Тираж</label>
-              <input
-                type="number"
-                value={formData.totalSupply}
-                onChange={(e) => setFormData(prev => ({ ...prev, totalSupply: parseInt(e.target.value) }))}
-                className="w-full px-4 py-3 bg-dark border border-dark rounded-xl text-light focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                required
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-muted-light text-sm mb-2">Роялти артиста (%)</label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.artistRoyalty}
-                onChange={(e) => setFormData(prev => ({ ...prev, artistRoyalty: e.target.value }))}
-                className="w-full px-4 py-3 bg-dark border border-dark rounded-xl text-light focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="block text-muted-light text-sm mb-2">Комиссия платформы (%)</label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.platformFee}
-                onChange={(e) => setFormData(prev => ({ ...prev, platformFee: e.target.value }))}
-                className="w-full px-4 py-3 bg-dark border border-dark rounded-xl text-light focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                required
-              />
-            </div>
-          </div>
-          
-          <div>
-            <label className="block text-muted-light text-sm mb-2">Описание</label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              className="w-full px-4 py-3 bg-dark border border-dark rounded-xl text-light focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-              rows={3}
-              placeholder="Описание дропа..."
-            />
-          </div>
-          
-          <div>
-            <label className="block text-muted-light text-sm mb-2">URL изображения</label>
-            <input
-              type="url"
-              value={formData.imageUrl}
-              onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
-              className="w-full px-4 py-3 bg-dark border border-dark rounded-xl text-light focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="https://example.com/image.jpg"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-muted-light text-sm mb-2">URL музыки</label>
-            <input
-              type="url"
-              value={formData.musicUrl}
-              onChange={(e) => setFormData(prev => ({ ...prev, musicUrl: e.target.value }))}
-              className="w-full px-4 py-3 bg-dark border border-dark rounded-xl text-light focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="https://example.com/music.mp3"
-            />
-          </div>
-          
-          <div className="flex gap-4 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-3 bg-dark border border-dark rounded-xl text-muted-light hover:text-light transition-colors"
-            >
-              Отмена
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex-1 px-4 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-600/50 text-white rounded-xl font-medium transition-colors"
-            >
-              {saving ? 'Сохранение...' : (drop ? 'Сохранить' : 'Создать')}
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   );

@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { IPFSService } from '@/lib/ipfs';
 import { MetadataService } from '@/lib/metadata';
 import { SolanaService } from '@/lib/solana';
 import { UploadProgress } from '@/components/ui/upload-progress';
@@ -25,16 +24,15 @@ interface CreateDropFormProps {
   onCancel?: () => void;
 }
 
+type StepStatus = 'pending' | 'loading' | 'completed' | 'error';
+
 export function CreateDropForm({ onSuccess, onCancel }: CreateDropFormProps) {
   const wallet = useWallet();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadSteps, setUploadSteps] = useState([
-    { label: 'Загрузка изображения в IPFS', status: 'pending' as const },
-    { label: 'Загрузка музыки в IPFS', status: 'pending' as const },
-    { label: 'Создание метаданных NFT', status: 'pending' as const },
-    { label: 'Загрузка метаданных в IPFS', status: 'pending' as const },
-    { label: 'Создание дропа в блокчейне', status: 'pending' as const },
+    { label: 'Загрузка файлов и метаданных', status: 'pending' as StepStatus },
+    { label: 'Создание дропа в блокчейне', status: 'pending' as StepStatus },
   ]);
   
   // Состояние формы
@@ -102,67 +100,56 @@ export function CreateDropForm({ onSuccess, onCancel }: CreateDropFormProps) {
       return;
     }
 
-    if (!imageFile || !musicFile) {
-      setError('Загрузите изображение и музыкальный файл');
+    if (!imageFile) {
+      setError('Загрузите изображение');
+      return;
+    }
+
+    if (!musicFile) {
+      setError('Загрузите музыкальный файл');
       return;
     }
 
     setIsLoading(true);
     setError(null);
+    setUploadSteps([
+      { label: 'Загрузка файлов и метаданных', status: 'pending' as StepStatus },
+      { label: 'Создание дропа в блокчейне', status: 'pending' as StepStatus },
+    ]);
 
     try {
-      // 1. Загружаем изображение в IPFS
-      setUploadSteps(prev => prev.map((step, i) => 
-        i === 0 ? { ...step, status: 'loading' } : step
-      ));
-      const imageHash = await IPFSService.uploadFile(imageFile);
-      setUploadSteps(prev => prev.map((step, i) => 
-        i === 0 ? { ...step, status: 'completed' } : step
-      ));
+      // Step 1: Upload assets and metadata via backend
+      setUploadSteps(prev => prev.map((step, i) => i === 0 ? { ...step, status: 'loading' } : step));
+      
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('artist', formData.artist);
+      if (formData.genre) formDataToSend.append('genre', formData.genre);
+      if (formData.bpm) formDataToSend.append('bpm', formData.bpm);
+      if (formData.key) formDataToSend.append('key', formData.key);
+      formDataToSend.append('imageFile', imageFile);
+      formDataToSend.append('musicFile', musicFile);
+      formDataToSend.append('creatorAddress', wallet.publicKey.toString());
 
-      // 2. Загружаем музыку в IPFS
-      setUploadSteps(prev => prev.map((step, i) => 
-        i === 1 ? { ...step, status: 'loading' } : step
-      ));
-      const musicHash = await IPFSService.uploadFile(musicFile);
-      setUploadSteps(prev => prev.map((step, i) => 
-        i === 1 ? { ...step, status: 'completed' } : step
-      ));
-
-      // 3. Получаем информацию об аудиофайле и создаем метаданные
-      setUploadSteps(prev => prev.map((step, i) => 
-        i === 2 ? { ...step, status: 'loading' } : step
-      ));
-      const audioInfo = await MetadataService.getAudioInfo(musicFile);
-      setUploadSteps(prev => prev.map((step, i) => 
-        i === 2 ? { ...step, status: 'completed' } : step
-      ));
-
-      // 4. Загружаем метаданные в IPFS
-      setUploadSteps(prev => prev.map((step, i) => 
-        i === 3 ? { ...step, status: 'loading' } : step
-      ));
-      const metadataHash = await MetadataService.uploadMetadata({
-        name: formData.name,
-        description: formData.description,
-        artist: formData.artist,
-        genre: formData.genre || undefined,
-        duration: audioInfo.duration,
-        bpm: formData.bpm ? parseInt(formData.bpm) : undefined,
-        key: formData.key || undefined,
-        imageHash,
-        musicHash,
-        creatorAddress: wallet.publicKey.toString(),
+      const response = await fetch('/api/create-drop', {
+        method: 'POST',
+        body: formDataToSend,
       });
-      setUploadSteps(prev => prev.map((step, i) => 
-        i === 3 ? { ...step, status: 'completed' } : step
-      ));
 
-      // 5. Создаем дроп в блокчейне
-      setUploadSteps(prev => prev.map((step, i) => 
-        i === 4 ? { ...step, status: 'loading' } : step
-      ));
-      // Устанавливаем время начала - сейчас, время окончания - через 30 дней
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Ошибка при загрузке файлов');
+      }
+
+      const { imageHash, musicHash, metadataHash } = result;
+      
+      setUploadSteps(prev => prev.map((step, i) => i === 0 ? { ...step, status: 'completed' } : step));
+
+      // Step 2: Create drop on Solana
+      setUploadSteps(prev => prev.map((step, i) => i === 1 ? { ...step, status: 'loading' } : step));
+
       const startTime = new Date();
       const endTime = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
@@ -178,9 +165,8 @@ export function CreateDropForm({ onSuccess, onCancel }: CreateDropFormProps) {
         musicHash,
         metadataHash,
       });
-      setUploadSteps(prev => prev.map((step, i) => 
-        i === 4 ? { ...step, status: 'completed' } : step
-      ));
+
+      setUploadSteps(prev => prev.map((step, i) => i === 1 ? { ...step, status: 'completed' } : step));
 
       console.log('Дроп создан успешно!', signature);
       onSuccess?.(signature);
@@ -188,7 +174,6 @@ export function CreateDropForm({ onSuccess, onCancel }: CreateDropFormProps) {
     } catch (err) {
       console.error('Ошибка создания дропа:', err);
       setError(err instanceof Error ? err.message : 'Произошла ошибка при создании дропа');
-      // Отмечаем текущий шаг как ошибочный
       setUploadSteps(prev => prev.map(step => 
         step.status === 'loading' ? { ...step, status: 'error' } : step
       ));
@@ -198,7 +183,7 @@ export function CreateDropForm({ onSuccess, onCancel }: CreateDropFormProps) {
   };
 
   return (
-    <div className="w-full max-w-none">
+    <div className="w-full">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center space-x-4">
@@ -283,23 +268,35 @@ export function CreateDropForm({ onSuccess, onCancel }: CreateDropFormProps) {
                   <Headphones className="w-4 h-4" />
                   <span>Жанр</span>
                 </label>
-                <select
-                  name="genre"
-                  value={formData.genre}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-800/50 border border-gray-700 rounded-2xl px-4 py-4 text-light focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
-                >
-                  <option value="">Выберите жанр</option>
-                  <option value="Electronic">Электронная музыка</option>
-                  <option value="Hip-Hop">Хип-хоп</option>
-                  <option value="Rock">Рок</option>
-                  <option value="Jazz">Джаз</option>
-                  <option value="Pop">Поп</option>
-                  <option value="Classical">Классическая</option>
-                  <option value="Ambient">Эмбиент</option>
-                  <option value="Techno">Техно</option>
-                  <option value="House">Хаус</option>
-                </select>
+                <div className="relative">
+                  <select
+                    name="genre"
+                    value={formData.genre}
+                    onChange={handleInputChange}
+                    className="w-full bg-gray-800/50 border border-gray-700 rounded-2xl px-4 py-4 text-light focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all appearance-none"
+                  >
+                    <option value="">Выберите жанр</option>
+                    <option value="Electronic">Электронная музыка</option>
+                    <option value="Hip-Hop">Хип-хоп</option>
+                    <option value="Rock">Рок</option>
+                    <option value="Jazz">Джаз</option>
+                    <option value="Pop">Поп</option>
+                    <option value="Classical">Классическая</option>
+                    <option value="Ambient">Эмбиент</option>
+                    <option value="Techno">Техно</option>
+                    <option value="House">Хаус</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
               </div>
             </div>
 

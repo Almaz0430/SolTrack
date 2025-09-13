@@ -66,7 +66,7 @@ export default function CreateDropPage() {
 
   return (
     <div className="bg-dark min-h-screen">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+      <div className="mx-auto px-6 lg:px-8 py-8 max-w-7xl">
         <CreateDropForm onSuccess={handleSuccess} onCancel={handleCancel} />
       </div>
     </div>
