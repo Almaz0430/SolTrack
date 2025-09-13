@@ -4,6 +4,9 @@ FROM node:20-slim
 # Set the working directory in the container
 WORKDIR /app
 
+# Install OpenSSL, a dependency for Prisma
+RUN apt-get update -y && apt-get install -y openssl
+
 # Install pnpm
 RUN npm install -g pnpm
 
