@@ -8,5 +8,4 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient();
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
-// Типы для использования в приложении
 export type { Drop, DropStatus } from '@prisma/client';

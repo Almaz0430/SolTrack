@@ -36,7 +36,7 @@ export interface NFTListing {
   name: string;
   description: string;
   image: string;
-  price: number; // в SOL
+  price: number;
   creator: string;
   seller: string;
   metadata: NFTMetadata;

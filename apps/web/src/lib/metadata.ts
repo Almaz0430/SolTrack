@@ -1,11 +1,11 @@
 import { IPFSService } from './ipfs';
 
-// Стандарт метаданных NFT
+// NFT
 export interface NFTMetadata {
   name: string;
   description: string;
   image: string;
-  animation_url?: string; // Для музыкальных файлов
+  animation_url?: string;
   external_url?: string;
   attributes: Array<{
     trait_type: string;
@@ -29,7 +29,7 @@ export interface CreateMetadataParams {
   description: string;
   artist: string;
   genre?: string;
-  duration?: number; // в секундах
+  duration?: number; 
   bpm?: number;
   key?: string;
   imageHash: string;
@@ -38,9 +38,6 @@ export interface CreateMetadataParams {
 }
 
 export class MetadataService {
-  /**
-   * Создает метаданные NFT в соответствии со стандартом
-   */
   static createNFTMetadata(params: CreateMetadataParams): NFTMetadata {
     const {
       name,
@@ -75,11 +72,11 @@ export class MetadataService {
         files: [
           {
             uri: IPFSService.getIPFSUrl(imageHash),
-            type: 'image/jpeg', // или определять динамически
+            type: 'image/jpeg',
           },
           {
             uri: IPFSService.getIPFSUrl(musicHash),
-            type: 'audio/mpeg', // или определять динамически
+            type: 'audio/mpeg', 
           },
         ],
         category: 'audio',
@@ -105,7 +102,7 @@ export class MetadataService {
    * Валидирует файл изображения
    */
   static validateImageFile(file: File): { valid: boolean; error?: string } {
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    const maxSize = 10 * 1024 * 1024; 
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
     if (!allowedTypes.includes(file.type)) {
@@ -123,7 +120,7 @@ export class MetadataService {
    * Валидирует музыкальный файл
    */
   static validateAudioFile(file: File): { valid: boolean; error?: string } {
-    const maxSize = 50 * 1024 * 1024; // 50MB
+    const maxSize = 50 * 1024 * 1024; 
     const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/flac', 'audio/ogg'];
 
     if (!allowedTypes.includes(file.type)) {
@@ -142,7 +139,6 @@ export class MetadataService {
    */
   static async getAudioInfo(file: File): Promise<{
     duration?: number;
-    // Можно добавить другие метаданные аудио
   }> {
     return new Promise((resolve) => {
       const audio = new Audio();

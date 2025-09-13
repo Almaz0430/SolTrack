@@ -35,7 +35,6 @@ export default function MarketPage() {
     );
   };
 
-  // Закрытие выпадающих списков при клике вне их
   useEffect(() => {
     const handleClickOutside = () => {
       setCategoryOpen(false);

@@ -37,7 +37,7 @@ export default function RootLayout({
       >
         <WalletContextProvider>
           <Header />
-          <main>
+          <main className="pt-20">
             {children}
           </main>
         </WalletContextProvider>

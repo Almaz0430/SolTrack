@@ -5,6 +5,7 @@ import { Notification, NotificationType } from '@/components/NotificationToast';
 
 export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [counter, setCounter] = useState(0);
 
   const addNotification = useCallback((
     type: NotificationType,
@@ -12,7 +13,8 @@ export function useNotifications() {
     message: string,
     duration?: number
   ) => {
-    const id = Math.random().toString(36).substr(2, 9);
+    setCounter((prev: number) => prev + 1);
+    const id = `notification-${Date.now()}-${counter}`;
     const notification: Notification = {
       id,
       type,
@@ -21,12 +23,12 @@ export function useNotifications() {
       duration,
     };
 
-    setNotifications(prev => [...prev, notification]);
+    setNotifications((prev: Notification[]) => [...prev, notification]);
     return id;
-  }, []);
+  }, [counter]);
 
   const removeNotification = useCallback((id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    setNotifications((prev: Notification[]) => prev.filter((n: Notification) => n.id !== id));
   }, []);
 
   const clearAll = useCallback(() => {

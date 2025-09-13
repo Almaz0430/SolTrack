@@ -55,7 +55,7 @@ export default function CreateDropPage() {
               onClick={() => router.push('/admin')}
               className="bg-gray-800 hover:bg-gray-700 text-muted-light hover:text-light border border-gray-700 px-8 py-4 rounded-2xl font-medium transition-all duration-200"
             >
-              Админ панель
+              Студия
             </button>
           </div>
         </div>

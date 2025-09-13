@@ -6,7 +6,6 @@ import { dropsApi, showNotification } from '@/lib/api';
 import { Drop } from '@prisma/client';
 import { Loader2, Music } from 'lucide-react';
 
-// Компонент карточки дропа
 function DropCard({ drop }: { drop: Drop }) {
   return (
     <Link href={`/drops/${drop.id}`} passHref>

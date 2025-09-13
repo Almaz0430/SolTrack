@@ -1,11 +1,11 @@
 import { Music, Rocket, Gem } from 'lucide-react';
+import Link from 'next/link';
 
 export default function HomePage() {
   return (
     <div className="bg-dark min-h-screen">
-      {/* Hero Section */}
+      {/* ЛЕНДИНГ */}
       <section className="relative min-h-screen bg-cover bg-center bg-no-repeat flex items-center" style={{backgroundImage: 'url(/img/background.jpg)'}}>
-        {/* Overlay для затемнения */}
         <div className="absolute inset-0 bg-black/60"></div>
         
         <div className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-8">
@@ -19,14 +19,16 @@ export default function HomePage() {
             <p className="text-xl lg:text-2xl text-muted-light mb-12 font-light leading-relaxed">
               Децентрализованная платформа для музыки на блокчейне Solana
             </p>
-            <button className="accent-purple text-white px-12 py-4 rounded-2xl font-medium text-lg transition-all duration-200 hover:scale-105 shadow-lg shadow-purple-600/25">
+            <Link 
+              href="/drops"
+              className="accent-purple text-white px-12 py-4 rounded-2xl font-medium text-lg transition-all duration-200 hover:scale-105 shadow-lg shadow-purple-600/25 inline-block"
+            >
               Начать исследование
-            </button>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
       <section className="py-24 lg:py-32 bg-dark">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-20">
@@ -72,7 +74,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="bg-dark-card py-24 lg:py-32 border-t border-dark">
         <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
           <h2 className="text-4xl lg:text-5xl font-light text-light mb-8">
@@ -82,12 +83,18 @@ export default function HomePage() {
             Присоединяйтесь к революции в музыкальной индустрии
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="accent-purple text-white px-10 py-4 rounded-2xl font-medium text-lg transition-all duration-200 hover:scale-105 shadow-lg shadow-purple-600/25">
+            <Link 
+              href="/drops"
+              className="accent-purple text-white px-10 py-4 rounded-2xl font-medium text-lg transition-all duration-200 hover:scale-105 shadow-lg shadow-purple-600/25 text-center"
+            >
               Исследовать дропы
-            </button>
-            <button className="border-2 border-purple-600/50 hover:border-purple-600 text-muted-light hover:text-light px-10 py-4 rounded-2xl font-medium text-lg transition-all duration-200 hover:scale-105 hover:bg-purple-600/10">
+            </Link>
+            <Link 
+              href="/market"
+              className="border-2 border-purple-600/50 hover:border-purple-600 text-muted-light hover:text-light px-10 py-4 rounded-2xl font-medium text-lg transition-all duration-200 hover:scale-105 hover:bg-purple-600/10 text-center"
+            >
               Посетить маркетплейс
-            </button>
+            </Link>
           </div>
         </div>
       </section>

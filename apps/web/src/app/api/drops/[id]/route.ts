@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { DropStatus } from '@prisma/client';
 
-// GET /api/drops/[id] - Получить дроп по ID
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -46,7 +45,6 @@ export async function GET(
   }
 }
 
-// PUT /api/drops/[id] - Обновить дроп
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -61,8 +59,7 @@ export async function PUT(
         { status: 400 }
       );
     }
-    
-    // Проверяем существование дропа
+
     const existingDrop = await prisma.drop.findUnique({
       where: { id }
     });
@@ -73,8 +70,7 @@ export async function PUT(
         { status: 404 }
       );
     }
-    
-    // Подготавливаем данные для обновления
+
     const updateData: any = {};
     
     if (body.name !== undefined) {
@@ -105,7 +101,6 @@ export async function PUT(
         );
       }
       
-      // Проверяем, что новый тираж не меньше уже заминченного количества
       if (totalSupply < existingDrop.mintedSupply) {
         return NextResponse.json(
           { success: false, error: 'Тираж не может быть меньше уже заминченного количества' },
@@ -149,8 +144,7 @@ export async function PUT(
       }
       updateData.platformFee = platformFee.toFixed(2);
     }
-    
-    // Проверяем сумму роялти и комиссии
+
     const finalArtistRoyalty = parseFloat(updateData.artistRoyalty || existingDrop.artistRoyalty);
     const finalPlatformFee = parseFloat(updateData.platformFee || existingDrop.platformFee);
     
@@ -172,8 +166,7 @@ export async function PUT(
     if (body.musicUrl !== undefined) {
       updateData.musicUrl = body.musicUrl?.trim() || null;
     }
-    
-    // Обновляем дроп
+
     const updatedDrop = await prisma.drop.update({
       where: { id },
       data: updateData
@@ -198,7 +191,6 @@ export async function PUT(
   }
 }
 
-// DELETE /api/drops/[id] - Удалить дроп
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -212,8 +204,7 @@ export async function DELETE(
         { status: 400 }
       );
     }
-    
-    // Проверяем существование дропа
+
     const existingDrop = await prisma.drop.findUnique({
       where: { id }
     });
@@ -224,8 +215,7 @@ export async function DELETE(
         { status: 404 }
       );
     }
-    
-    // Проверяем, можно ли удалить дроп
+
     if (existingDrop.status === 'ACTIVE' && existingDrop.mintedSupply > 0) {
       return NextResponse.json(
         { success: false, error: 'Нельзя удалить активный дроп с заминченными NFT' },

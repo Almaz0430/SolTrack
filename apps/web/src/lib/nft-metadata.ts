@@ -16,7 +16,6 @@ export class NFTMetadataService {
    */
   static async fetchMetadataFromIPFS(ipfsHash: string): Promise<NFTMetadata | null> {
     try {
-      // Используем публичный IPFS gateway
       const ipfsUrl = `https://ipfs.io/ipfs/${ipfsHash}`;
       
       const response = await fetch(ipfsUrl, {

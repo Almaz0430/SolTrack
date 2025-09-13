@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// POST /api/seed - Заполнить базу данных тестовыми данными
 export async function POST() {
   try {
-    // Проверяем, есть ли уже данные
     const existingDrops = await prisma.drop.count();
     
     if (existingDrops > 0) {
@@ -13,8 +11,7 @@ export async function POST() {
         message: `База данных уже содержит ${existingDrops} дропов`
       });
     }
-    
-    // Тестовые данные
+
     const testDrops = [
       {
         name: 'Midnight Dreams Collection',
@@ -82,8 +79,7 @@ export async function POST() {
         musicUrl: 'https://example.com/ambient.mp3',
       },
     ];
-    
-    // Создаем тестовые дропы
+
     const createdDrops = await prisma.drop.createMany({
       data: testDrops
     });

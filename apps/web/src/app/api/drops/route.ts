@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { DropStatus } from '@prisma/client';
 
-// GET /api/drops - Получить все дропы
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -10,13 +9,11 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search');
     
     const where: any = {};
-    
-    // Фильтрация по статусу
+ 
     if (status && status !== 'all') {
       where.status = status.toUpperCase() as DropStatus;
     }
-    
-    // Поиск по названию или артисту
+
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
@@ -47,12 +44,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/drops - Создать новый дроп
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
-    // Валидация обязательных полей
+
     const requiredFields = ['name', 'artist', 'price', 'totalSupply', 'artistRoyalty', 'platformFee'];
     const missingFields = requiredFields.filter(field => !body[field]);
     
@@ -66,8 +61,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
-    // Валидация числовых значений
+
     if (isNaN(parseFloat(body.price)) || parseFloat(body.price) <= 0) {
       return NextResponse.json(
         { success: false, error: 'Цена должна быть положительным числом' },
@@ -81,8 +75,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
-    // Валидация процентов
+
     const artistRoyalty = parseFloat(body.artistRoyalty);
     const platformFee = parseFloat(body.platformFee);
     
@@ -106,8 +99,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
-    // Создание дропа
+
     const newDrop = await prisma.drop.create({
       data: {
         name: body.name.trim(),

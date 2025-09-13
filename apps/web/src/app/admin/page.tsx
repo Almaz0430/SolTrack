@@ -56,7 +56,7 @@ export default function AdminPage() {
         {/* Заголовок */}
         <div className="mb-8">
           <h1 className="text-3xl lg:text-4xl font-light text-light mb-2">
-            Админ панель
+            Студия
           </h1>
           <p className="text-lg text-muted-light">
             Управление платформой Solana Music NFT

@@ -1,9 +1,7 @@
 import { Drop } from '@prisma/client';
 
-// Базовый URL для API
 const API_BASE = '/api';
 
-// Интерфейс для ответа API
 interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
@@ -13,7 +11,6 @@ interface ApiResponse<T = any> {
   missingFields?: string[];
 }
 
-// Утилита для выполнения запросов
 async function apiRequest<T = any>(
   endpoint: string,
   options: RequestInit = {}
@@ -43,9 +40,8 @@ async function apiRequest<T = any>(
   }
 }
 
-// API для работы с дропами
+// ДРОПЫ
 export const dropsApi = {
-  // Получить все дропы
   async getAll(params?: { status?: string; search?: string }): Promise<ApiResponse<Drop[]>> {
     const searchParams = new URLSearchParams();
     if (params?.status) searchParams.set('status', params.status);
@@ -55,12 +51,10 @@ export const dropsApi = {
     return apiRequest<Drop[]>(`/drops${query ? `?${query}` : ''}`);
   },
 
-  // Получить дроп по ID
   async getById(id: string): Promise<ApiResponse<Drop>> {
     return apiRequest<Drop>(`/drops/${id}`);
   },
 
-  // Создать новый дроп
   async create(dropData: Omit<Drop, 'id' | 'createdAt' | 'updatedAt' | 'mintedSupply'>): Promise<ApiResponse<Drop>> {
     return apiRequest<Drop>('/drops', {
       method: 'POST',
@@ -68,7 +62,6 @@ export const dropsApi = {
     });
   },
 
-  // Обновить дроп
   async update(id: string, updates: Partial<Drop>): Promise<ApiResponse<Drop>> {
     return apiRequest<Drop>(`/drops/${id}`, {
       method: 'PUT',
@@ -76,21 +69,18 @@ export const dropsApi = {
     });
   },
 
-  // Удалить дроп
   async delete(id: string): Promise<ApiResponse<void>> {
     return apiRequest<void>(`/drops/${id}`, {
       method: 'DELETE',
     });
   },
 
-  // Активировать дроп
   async activate(id: string): Promise<ApiResponse<Drop>> {
     return apiRequest<Drop>(`/drops/${id}/activate`, {
       method: 'POST',
     });
   },
 
-  // Завершить дроп
   async complete(id: string): Promise<ApiResponse<Drop>> {
     return apiRequest<Drop>(`/drops/${id}/complete`, {
       method: 'POST',
@@ -110,30 +100,26 @@ export const showNotification = (message: string, type: 'success' | 'error' = 's
   }
 };
 
-// Утилиты для форматирования
 export const formatters = {
-  // Форматирование даты
   date: (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('ru-RU', {
+    return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      hour12: false
     });
   },
 
-  // Форматирование цены
   price: (price: string): string => {
     return `${parseFloat(price).toFixed(4)} SOL`;
   },
 
-  // Форматирование процентов
   percentage: (value: string): string => {
     return `${parseFloat(value).toFixed(2)}%`;
   },
 
-  // Форматирование прогресса
   progress: (minted: number, total: number): { percentage: number; text: string } => {
     const percentage = total > 0 ? Math.round((minted / total) * 100) : 0;
     return {
@@ -143,9 +129,7 @@ export const formatters = {
   },
 };
 
-// Валидаторы
 export const validators = {
-  // Валидация цены
   price: (value: string): string | null => {
     const price = parseFloat(value);
     if (isNaN(price) || price <= 0) {
@@ -154,7 +138,6 @@ export const validators = {
     return null;
   },
 
-  // Валидация тиража
   totalSupply: (value: number): string | null => {
     if (!Number.isInteger(value) || value <= 0) {
       return 'Тираж должен быть положительным целым числом';
@@ -162,7 +145,6 @@ export const validators = {
     return null;
   },
 
-  // Валидация процентов
   percentage: (value: string, fieldName: string): string | null => {
     const percentage = parseFloat(value);
     if (isNaN(percentage) || percentage < 0 || percentage > 100) {
@@ -171,7 +153,6 @@ export const validators = {
     return null;
   },
 
-  // Валидация обязательного поля
   required: (value: string, fieldName: string): string | null => {
     if (!value || value.trim().length === 0) {
       return `${fieldName} обязательно для заполнения`;

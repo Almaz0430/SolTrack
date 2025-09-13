@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// POST /api/drops/[id]/activate - Активировать дроп
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -16,7 +15,6 @@ export async function POST(
       );
     }
     
-    // Проверяем существование дропа
     const existingDrop = await prisma.drop.findUnique({
       where: { id }
     });
@@ -27,8 +25,6 @@ export async function POST(
         { status: 404 }
       );
     }
-    
-    // Проверяем, можно ли активировать дроп
     if (existingDrop.status !== 'DRAFT') {
       return NextResponse.json(
         { 
@@ -38,16 +34,14 @@ export async function POST(
         { status: 400 }
       );
     }
-    
-    // Проверяем обязательные поля для активации
+
     if (!existingDrop.name || !existingDrop.artist || !existingDrop.price) {
       return NextResponse.json(
         { success: false, error: 'Для активации дропа необходимо заполнить все обязательные поля' },
         { status: 400 }
       );
     }
-    
-    // Активируем дроп
+
     const activatedDrop = await prisma.drop.update({
       where: { id },
       data: { status: 'ACTIVE' }

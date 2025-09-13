@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// POST /api/drops/[id]/complete - Завершить дроп
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -15,8 +14,7 @@ export async function POST(
         { status: 400 }
       );
     }
-    
-    // Проверяем существование дропа
+ 
     const existingDrop = await prisma.drop.findUnique({
       where: { id }
     });
@@ -27,8 +25,7 @@ export async function POST(
         { status: 404 }
       );
     }
-    
-    // Проверяем, можно ли завершить дроп
+  
     if (existingDrop.status !== 'ACTIVE') {
       return NextResponse.json(
         { 
@@ -38,8 +35,7 @@ export async function POST(
         { status: 400 }
       );
     }
-    
-    // Завершаем дроп
+
     const completedDrop = await prisma.drop.update({
       where: { id },
       data: { status: 'COMPLETED' }

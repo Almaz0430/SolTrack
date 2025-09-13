@@ -38,9 +38,8 @@ export async function POST(request: Request) {
         totalSupply: parseInt(totalSupply),
         imageUrl,
         musicUrl,
-        // Default values for new fields
-        artistRoyalty: '90.00', // Example: 90%
-        platformFee: '10.00'  // Example: 10%
+        artistRoyalty: '90.00', 
+        platformFee: '10.00' 
       }
     });
 
@@ -56,7 +55,6 @@ export async function POST(request: Request) {
       creatorAddress,
     });
     
-    // Возвращаем и созданный дроп, и хеш метаданных
     return NextResponse.json({ drop: newDrop, metadataHash });
 
   } catch (error) {

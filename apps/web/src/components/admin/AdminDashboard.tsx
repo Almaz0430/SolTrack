@@ -96,7 +96,7 @@ export function AdminDashboard() {
               signature: 'tx123...',
               amount: 2.5,
               type: 'purchase',
-              createdAt: new Date().toISOString(),
+              createdAt: '2024-01-16T10:30:00Z', // Фиксированная дата
             },
             drop: { name: 'Midnight Dreams', artist: 'ElectroWave' },
           },

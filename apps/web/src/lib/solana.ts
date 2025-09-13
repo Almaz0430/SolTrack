@@ -1,13 +1,12 @@
 import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 
-// Типы для дропов
 export interface DropData {
   id: string;
   name: string;
   description: string;
   artist: string;
-  price: number; // в SOL
+  price: number;
   totalSupply: number;
   currentSupply: number;
   startTime: number;
@@ -59,13 +58,11 @@ export class SolanaService {
     const connection = this.getConnection();
 
     try {
-      // Здесь будет логика создания дропа через смарт-контракт
-      // Пока создаем простую транзакцию для демонстрации
       const transaction = new Transaction().add(
         SystemProgram.transfer({
           fromPubkey: wallet.publicKey,
-          toPubkey: wallet.publicKey, // Временно на себя
-          lamports: 0.001 * LAMPORTS_PER_SOL, // Минимальная комиссия
+          toPubkey: wallet.publicKey,
+          lamports: 0.001 * LAMPORTS_PER_SOL,
         })
       );
 
@@ -78,7 +75,6 @@ export class SolanaService {
       
       await connection.confirmTransaction(signature);
 
-      // В реальном приложении здесь будет сохранение данных дропа
       console.log('Drop created with signature:', signature);
       
       return signature;
@@ -92,8 +88,7 @@ export class SolanaService {
    * Получает список всех дропов
    */
   static async getDrops(): Promise<DropData[]> {
-    // В реальном приложении здесь будет запрос к смарт-контракту
-    // Пока возвращаем моковые данные
+    const now = 1704067200000;
     return [
       {
         id: '1',
@@ -103,8 +98,8 @@ export class SolanaService {
         price: 2.5,
         totalSupply: 100,
         currentSupply: 45,
-        startTime: Date.now() - 86400000, // 1 день назад
-        endTime: Date.now() + 172800000, // 2 дня вперед
+        startTime: now - 86400000,
+        endTime: now + 172800000,
         imageHash: 'QmExample1',
         musicHash: 'QmExample2',
         metadataHash: 'QmExample3',
@@ -118,8 +113,8 @@ export class SolanaService {
         price: 0.5,
         totalSupply: 50,
         currentSupply: 0,
-        startTime: Date.now() + 432000000, // 5 дней вперед
-        endTime: Date.now() + 864000000, // 10 дней вперед
+        startTime: now + 432000000,
+        endTime: now + 864000000,
         imageHash: 'QmExample4',
         musicHash: 'QmExample5',
         metadataHash: 'QmExample6',
@@ -163,11 +158,10 @@ export class SolanaService {
     const connection = this.getConnection();
 
     try {
-      // Здесь будет логика покупки NFT через смарт-контракт
       const transaction = new Transaction().add(
         SystemProgram.transfer({
           fromPubkey: wallet.publicKey,
-          toPubkey: wallet.publicKey, // Временно на себя
+          toPubkey: wallet.publicKey,
           lamports: drop.price * LAMPORTS_PER_SOL,
         })
       );
@@ -191,5 +185,4 @@ export class SolanaService {
   }
 }
 
-// Инициализируем сервис при импорте
 SolanaService.initialize();
