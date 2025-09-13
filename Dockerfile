@@ -17,6 +17,9 @@ COPY . .
 # We need dev dependencies like `prisma` for the build step
 RUN pnpm install
 
+# Apply database migrations
+RUN pnpm --filter web prisma migrate deploy
+
 # Generate Prisma Client
 RUN pnpm --filter web prisma generate
 
