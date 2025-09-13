@@ -134,8 +134,9 @@ pub struct CreateMusicNft<'info> {
     pub authority: Signer<'info>, // владелец NFT
     #[account(mut)]
     pub payer: Signer<'info>, // платит за транзакцию
+    /// CHECK: Mint аккаунт будет создан в той же транзакции
     #[account(mut)]
-    pub mint: Account<'info, Mint>, // минт-аккаунт токена
+    pub mint: UncheckedAccount<'info>, // минт-аккаунт токена
     #[account(mut)]
     pub token_account: Account<'info, TokenAccount>, // куда зачислится NFT
     

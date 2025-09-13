@@ -8,6 +8,9 @@ skip-lint = false
 [programs.localnet]
 music_nft = "9ysQaigie6LHeqMEWGMWBYkdXFg4zyHhBnxzmZdMzG7T"
 
+[programs.devnet]
+music_nft = "9ysQaigie6LHeqMEWGMWBYkdXFg4zyHhBnxzmZdMzG7T"
+
 [registry]
 programs = [
   { name = "music_nft", keypair = "./keys/music_nft-keypair.json" }
@@ -15,7 +18,7 @@ programs = [
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "http://127.0.0.1:8899"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
