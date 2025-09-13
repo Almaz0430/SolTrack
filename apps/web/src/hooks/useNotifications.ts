@@ -13,18 +13,22 @@ export function useNotifications() {
     message: string,
     duration?: number
   ) => {
-    setCounter((prev: number) => prev + 1);
-    const id = `notification-${Date.now()}-${counter}`;
-    const notification: Notification = {
-      id,
-      type,
-      title,
-      message,
-      duration,
-    };
+    setCounter((prev: number) => {
+      const newCounter = prev + 1;
+      const id = `notification-${newCounter}`;
+      const notification: Notification = {
+        id,
+        type,
+        title,
+        message,
+        duration,
+      };
 
-    setNotifications((prev: Notification[]) => [...prev, notification]);
-    return id;
+      setNotifications((prevNotifications: Notification[]) => [...prevNotifications, notification]);
+      return newCounter;
+    });
+    
+    return `notification-${counter + 1}`;
   }, [counter]);
 
   const removeNotification = useCallback((id: string) => {

@@ -398,7 +398,10 @@ export function TransactionsTable() {
                   
                   <td className="py-4 px-6">
                     <span className="text-muted-light text-sm">
-                      {new Date(tx.createdAt).toLocaleString('ru-RU')}
+                      {typeof window === 'undefined' 
+                        ? new Date(tx.createdAt).toISOString()
+                        : new Date(tx.createdAt).toLocaleString('ru-RU')
+                      }
                     </span>
                   </td>
                   

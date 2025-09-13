@@ -41,7 +41,9 @@ export function TransactionHistory() {
 
   const formatDate = (timestamp: number | null) => {
     if (!timestamp) return 'Неизвестно';
-    // Используем фиксированную локаль для консистентности между сервером и клиентом
+    if (typeof window === 'undefined') {
+      return new Date(timestamp * 1000).toISOString();
+    }
     return new Date(timestamp * 1000).toLocaleString('en-US', {
       year: 'numeric',
       month: '2-digit',

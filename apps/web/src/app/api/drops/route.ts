@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { DropStatus } from '@prisma/client';
+import { DropStatus, TransactionType } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
@@ -112,6 +112,17 @@ export async function POST(request: NextRequest) {
         description: body.description?.trim() || null,
         imageUrl: body.imageUrl?.trim() || null,
         musicUrl: body.musicUrl?.trim() || null,
+      }
+    });
+
+    // После создания дропа, создаем запись о событии
+    await prisma.transaction.create({
+      data: {
+        signature: `drop_created_${newDrop.id}`, // Уникальная "подпись" для события
+        type: TransactionType.DROP_CREATED,
+        amount: '0', // Сумма 0, т.к. это не финансовая транзакция
+        status: 'CONFIRMED', // Сразу подтверждено
+        dropId: newDrop.id, // Связываем с созданным дропом
       }
     });
     

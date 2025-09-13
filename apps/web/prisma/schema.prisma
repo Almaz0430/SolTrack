@@ -26,12 +26,48 @@ model Drop {
   imageUrl      String?
   musicUrl      String?
 
+  // Связи
+  transactions  Transaction[]
+
   @@map("drops")
+}
+
+model Transaction {
+  id            String   @id @default(cuid())
+  signature     String   @unique // Подпись транзакции в блокчейне
+  type          TransactionType
+  amount        String   // Сумма в SOL (строка для точности)
+  status        TransactionStatus @default(PENDING)
+  buyerAddress  String?  // Адрес покупателя
+  sellerAddress String?  // Адрес продавца
+  dropId        String?  // ID связанного дропа
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Связи
+  drop          Drop?    @relation(fields: [dropId], references: [id])
+
+  @@map("transactions")
 }
 
 enum DropStatus {
   DRAFT
   ACTIVE
   COMPLETED
+  CANCELLED
+}
+
+enum TransactionType {
+  PURCHASE
+  MINT
+  TRANSFER
+  REFUND
+  DROP_CREATED
+}
+
+enum TransactionStatus {
+  PENDING
+  CONFIRMED
+  FAILED
   CANCELLED
 }

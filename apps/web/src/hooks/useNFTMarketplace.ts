@@ -5,6 +5,8 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useNFTTransactions } from './useNFTTransactions';
 import { NFTMetadataService } from '@/lib/nft-metadata';
+import { Drop } from '@prisma/client';
+import { dropsApi } from '../lib/api';
 
 export interface NFTMetadata {
   name: string;
@@ -20,152 +22,16 @@ export interface NFTMetadata {
 }
 
 export interface NFTListing {
-  id: string;
-  mint: string;
+  id: string; // Будет использоваться drop.id
+  mint: string; // Пока будет моковый, в будущем - адрес mint'а NFT
   name: string;
   description: string;
   image: string;
   price: number; // в SOL
-  creator: string;
-  seller: string;
+  creator: string; // Будет использоваться drop.artist
+  seller: string; // В будущем - адрес владельца. Пока моковый.
   metadata: NFTMetadata;
 }
-
-// Моковые данные NFT для демонстрации
-const MOCK_NFTS: NFTListing[] = [
-  {
-    id: '1',
-    mint: 'DemoMint1111111111111111111111111111111',
-    name: 'Midnight Dreams',
-    description: 'Электронная композиция в стиле ambient с глубокими басами',
-    image: '/api/placeholder/400/400',
-    price: 2.5,
-    creator: 'ElectroWave',
-    seller: '11111111111111111111111111111112',
-    metadata: {
-      name: 'Midnight Dreams',
-      description: 'Электронная композиция в стиле ambient с глубокими басами',
-      image: '/api/placeholder/400/400',
-      creator: 'ElectroWave',
-      price: 2.5,
-      attributes: [
-        { trait_type: 'Genre', value: 'Electronic' },
-        { trait_type: 'Duration', value: '3:45' },
-        { trait_type: 'BPM', value: '120' }
-      ]
-    }
-  },
-  {
-    id: '2',
-    mint: 'DemoMint2222222222222222222222222222222',
-    name: 'Rock Anthem #42',
-    description: 'Мощная рок-композиция с эпическими гитарными соло',
-    image: '/api/placeholder/400/400',
-    price: 1.8,
-    creator: 'RockLegend',
-    seller: '11111111111111111111111111111113',
-    metadata: {
-      name: 'Rock Anthem #42',
-      description: 'Мощная рок-композиция с эпическими гитарными соло',
-      image: '/api/placeholder/400/400',
-      creator: 'RockLegend',
-      price: 1.8,
-      attributes: [
-        { trait_type: 'Genre', value: 'Rock' },
-        { trait_type: 'Duration', value: '4:12' },
-        { trait_type: 'Instruments', value: 'Guitar, Drums, Bass' }
-      ]
-    }
-  },
-  {
-    id: '3',
-    mint: 'DemoMint3333333333333333333333333333333',
-    name: 'Jazz Fusion',
-    description: 'Сложная джазовая композиция с импровизацией и соло саксофона',
-    image: '/api/placeholder/400/400',
-    price: 3.2,
-    creator: 'SmoothJazz',
-    seller: '11111111111111111111111111111114',
-    metadata: {
-      name: 'Jazz Fusion',
-      description: 'Сложная джазовая композиция с импровизацией и соло саксофона',
-      image: '/api/placeholder/400/400',
-      creator: 'SmoothJazz',
-      price: 3.2,
-      attributes: [
-        { trait_type: 'Genre', value: 'Jazz' },
-        { trait_type: 'Duration', value: '5:30' },
-        { trait_type: 'Key', value: 'Bb Major' }
-      ]
-    }
-  },
-  {
-    id: '4',
-    mint: 'DemoMint4444444444444444444444444444444',
-    name: 'Beat Drop Supreme',
-    description: 'Энергичный трек с мощными ударными и синтезаторами',
-    image: '/api/placeholder/400/400',
-    price: 0.9,
-    creator: 'DrumMaster',
-    seller: '11111111111111111111111111111115',
-    metadata: {
-      name: 'Beat Drop Supreme',
-      description: 'Энергичный трек с мощными ударными и синтезаторами',
-      image: '/api/placeholder/400/400',
-      creator: 'DrumMaster',
-      price: 0.9,
-      attributes: [
-        { trait_type: 'Genre', value: 'Electronic' },
-        { trait_type: 'Duration', value: '2:58' },
-        { trait_type: 'BPM', value: '140' }
-      ]
-    }
-  },
-  {
-    id: '5',
-    mint: 'DemoMint5555555555555555555555555555555',
-    name: 'Vocal Harmony',
-    description: 'Красивая вокальная композиция с многослойными гармониями',
-    image: '/api/placeholder/400/400',
-    price: 4.1,
-    creator: 'VoiceAngel',
-    seller: '11111111111111111111111111111116',
-    metadata: {
-      name: 'Vocal Harmony',
-      description: 'Красивая вокальная композиция с многослойными гармониями',
-      image: '/api/placeholder/400/400',
-      creator: 'VoiceAngel',
-      price: 4.1,
-      attributes: [
-        { trait_type: 'Genre', value: 'Pop' },
-        { trait_type: 'Duration', value: '3:22' },
-        { trait_type: 'Vocal Range', value: 'Soprano' }
-      ]
-    }
-  },
-  {
-    id: '6',
-    mint: 'DemoMint6666666666666666666666666666666',
-    name: 'Brass Section',
-    description: 'Духовая секция с богатым звучанием трубы и тромбона',
-    image: '/api/placeholder/400/400',
-    price: 1.5,
-    creator: 'BrassKing',
-    seller: '11111111111111111111111111111117',
-    metadata: {
-      name: 'Brass Section',
-      description: 'Духовая секция с богатым звучанием трубы и тромбона',
-      image: '/api/placeholder/400/400',
-      creator: 'BrassKing',
-      price: 1.5,
-      attributes: [
-        { trait_type: 'Genre', value: 'Jazz' },
-        { trait_type: 'Duration', value: '4:05' },
-        { trait_type: 'Instruments', value: 'Trumpet, Trombone' }
-      ]
-    }
-  }
-];
 
 export function useNFTMarketplace() {
   const { connection } = useConnection();
@@ -176,19 +42,42 @@ export function useNFTMarketplace() {
   const [balance, setBalance] = useState<number>(0);
   const [userNFTs, setUserNFTs] = useState<string[]>([]);
 
-  // Загрузка NFT (в реальном приложении здесь был бы запрос к программе)
   const fetchNFTs = useCallback(async () => {
     setLoading(true);
     try {
-      // Имитация загрузки
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setNfts(MOCK_NFTS);
+      const response = await dropsApi.getAll({ status: 'ACTIVE' });
+      if (response.success && response.data) {
+        // Адаптируем данные дропов под формат NFTListing
+        const adaptedNfts = response.data.map((drop: Drop): NFTListing => ({
+          id: drop.id,
+          mint: `drop_${drop.id}`, // Временный уникальный mint
+          name: drop.name,
+          description: drop.description || 'Нет описания',
+          image: drop.imageUrl || '/api/placeholder/400/400',
+          price: parseFloat(drop.price),
+          creator: drop.artist,
+          seller: publicKey?.toBase58() || '11111111111111111111111111111111', // Адрес продавца (пока моковый)
+          metadata: {
+            name: drop.name,
+            description: drop.description || 'Нет описания',
+            image: drop.imageUrl || '',
+            creator: drop.artist,
+            price: parseFloat(drop.price),
+            attributes: [], // Можно будет добавить в будущем
+          }
+        }));
+        setNfts(adaptedNfts);
+      } else {
+        console.error("Ошибка загрузки дропов для маркетплейса:", response.error);
+        setNfts([]);
+      }
     } catch (error) {
       console.error('Ошибка загрузки NFT:', error);
+      setNfts([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [publicKey]);
 
   // Получение баланса кошелька
   const fetchBalance = useCallback(async () => {
@@ -215,7 +104,7 @@ export function useNFTMarketplace() {
     try {
       const result = await purchaseNFT(nft.mint, nft.price, nft.seller);
       
-      if (!result.success) {
+      if (!result.success || !result.signature) {
         throw new Error(result.error || 'Ошибка покупки NFT');
       }
 
@@ -224,6 +113,25 @@ export function useNFTMarketplace() {
       
       // Обновляем баланс
       await fetchBalance();
+
+      // Сохраняем транзакцию в БД с реальным dropId
+      try {
+        await fetch('/api/transactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            signature: result.signature,
+            type: 'PURCHASE',
+            amount: nft.price,
+            status: 'CONFIRMED',
+            buyerAddress: publicKey.toString(),
+            sellerAddress: nft.seller,
+            dropId: nft.id, // Используем ID дропа
+          }),
+        });
+      } catch (dbError) {
+        console.error('Ошибка сохранения транзакции в БД:', dbError);
+      }
       
       return result.signature;
     } catch (error) {
@@ -261,9 +169,10 @@ export function useNFTMarketplace() {
     fetchUserNFTs();
   }, [fetchBalance, fetchUserNFTs]);
 
-  // Инициализация NFTMetadataService
   useEffect(() => {
-    NFTMetadataService.initialize(connection);
+    if (typeof window !== 'undefined' && connection) {
+      NFTMetadataService.initialize(connection);
+    }
   }, [connection]);
 
   return {

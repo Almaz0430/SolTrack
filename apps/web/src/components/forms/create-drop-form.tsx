@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { MetadataService } from '@/lib/metadata';
 import { SolanaService } from '@/lib/solana';
+import { useMusicNFT } from '@/hooks/useMusicNFT';
 import { UploadProgress } from '@/components/ui/upload-progress';
 import { 
   Music, 
@@ -28,11 +29,12 @@ type StepStatus = 'pending' | 'loading' | 'completed' | 'error';
 
 export function CreateDropForm({ onSuccess, onCancel }: CreateDropFormProps) {
   const wallet = useWallet();
+  const { createNFT, loading: nftLoading, isInitialized } = useMusicNFT();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadSteps, setUploadSteps] = useState([
     { label: 'Загрузка файлов и метаданных', status: 'pending' as StepStatus },
-    { label: 'Создание дропа в блокчейне', status: 'pending' as StepStatus },
+    { label: 'Создание NFT в блокчейне', status: 'pending' as StepStatus },
   ]);
   
   // Состояние формы
@@ -100,6 +102,11 @@ export function CreateDropForm({ onSuccess, onCancel }: CreateDropFormProps) {
       return;
     }
 
+    if (!isInitialized) {
+      setError('Смарт-контракт не инициализирован. Попробуйте позже.');
+      return;
+    }
+
     if (!imageFile) {
       setError('Загрузите изображение');
       return;
@@ -114,7 +121,7 @@ export function CreateDropForm({ onSuccess, onCancel }: CreateDropFormProps) {
     setError(null);
     setUploadSteps([
       { label: 'Загрузка файлов и метаданных', status: 'pending' as StepStatus },
-      { label: 'Создание дропа в блокчейне', status: 'pending' as StepStatus },
+      { label: 'Создание NFT в блокчейне', status: 'pending' as StepStatus },
     ]);
 
     try {
@@ -128,11 +135,13 @@ export function CreateDropForm({ onSuccess, onCancel }: CreateDropFormProps) {
       if (formData.genre) formDataToSend.append('genre', formData.genre);
       if (formData.bpm) formDataToSend.append('bpm', formData.bpm);
       if (formData.key) formDataToSend.append('key', formData.key);
+      formDataToSend.append('price', formData.price);
+      formDataToSend.append('totalSupply', formData.totalSupply);
       formDataToSend.append('imageFile', imageFile);
       formDataToSend.append('musicFile', musicFile);
       formDataToSend.append('creatorAddress', wallet.publicKey.toString());
 
-      const response = await fetch('/api/create-drop', {
+      const response = await fetch('/api/create-nft', {
         method: 'POST',
         body: formDataToSend,
       });
@@ -143,37 +152,23 @@ export function CreateDropForm({ onSuccess, onCancel }: CreateDropFormProps) {
         throw new Error(result.error || 'Ошибка при загрузке файлов');
       }
 
-      const { imageHash, musicHash, metadataHash } = result;
+      const { nftParams } = result;
       
       setUploadSteps(prev => prev.map((step, i) => i === 0 ? { ...step, status: 'completed' } : step));
 
-      // Step 2: Create drop on Solana
+      // Step 2: Create NFT on Solana blockchain
       setUploadSteps(prev => prev.map((step, i) => i === 1 ? { ...step, status: 'loading' } : step));
 
-      const startTime = new Date();
-      const endTime = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-
-      const signature = await SolanaService.createDrop(wallet, {
-        name: formData.name,
-        description: formData.description,
-        artist: formData.artist,
-        price: parseFloat(formData.price),
-        totalSupply: parseInt(formData.totalSupply),
-        startTime,
-        endTime,
-        imageHash,
-        musicHash,
-        metadataHash,
-      });
+      const nftResult = await createNFT(nftParams);
 
       setUploadSteps(prev => prev.map((step, i) => i === 1 ? { ...step, status: 'completed' } : step));
 
-      console.log('Дроп создан успешно!', signature);
-      onSuccess?.(signature);
+      console.log('NFT создан успешно!', nftResult);
+      onSuccess?.(nftResult.signature);
 
     } catch (err) {
-      console.error('Ошибка создания дропа:', err);
-      setError(err instanceof Error ? err.message : 'Произошла ошибка при создании дропа');
+      console.error('Ошибка создания NFT:', err);
+      setError(err instanceof Error ? err.message : 'Произошла ошибка при создании NFT');
       setUploadSteps(prev => prev.map(step => 
         step.status === 'loading' ? { ...step, status: 'error' } : step
       ));
@@ -529,18 +524,18 @@ export function CreateDropForm({ onSuccess, onCancel }: CreateDropFormProps) {
         <div className="flex justify-end space-x-4 pt-8">
           <button
             type="submit"
-            disabled={isLoading || !wallet.publicKey}
+            disabled={isLoading || nftLoading || !wallet.publicKey || !isInitialized}
             className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-12 py-4 rounded-2xl font-semibold transition-all duration-200 hover:scale-105 shadow-lg shadow-purple-600/25 disabled:opacity-50 disabled:hover:scale-100 flex items-center space-x-3"
           >
-            {isLoading ? (
+            {isLoading || nftLoading ? (
               <>
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Создание дропа...</span>
+                <span>Создание NFT...</span>
               </>
             ) : (
               <>
                 <Zap className="w-5 h-5" />
-                <span>Создать дроп</span>
+                <span>Создать NFT</span>
               </>
             )}
           </button>

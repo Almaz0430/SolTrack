@@ -96,6 +96,28 @@ export function useNFTTransactions() {
         throw new Error('Транзакция не удалась');
       }
 
+      // Сохраняем транзакцию в базу данных
+      try {
+        await fetch('/api/transactions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            signature,
+            type: 'PURCHASE',
+            amount: price,
+            status: 'CONFIRMED',
+            buyerAddress: publicKey.toString(),
+            sellerAddress: sellerAddress,
+            // dropId можно добавить если есть связь с дропом
+          }),
+        });
+      } catch (dbError) {
+        console.error('Ошибка сохранения транзакции в БД:', dbError);
+        // Не прерываем процесс, если не удалось сохранить в БД
+      }
+
       return {
         signature,
         success: true,

@@ -102,6 +102,9 @@ export const showNotification = (message: string, type: 'success' | 'error' = 's
 
 export const formatters = {
   date: (dateString: string): string => {
+    if (typeof window === 'undefined') {
+      return new Date(dateString).toISOString();
+    }
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',

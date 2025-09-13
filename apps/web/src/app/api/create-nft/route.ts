@@ -25,12 +25,41 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Загружаем файлы в IPFS
     const imageHash = await IPFSService.uploadFile(imageFile);
     const musicHash = await IPFSService.uploadFile(musicFile);
     
     const imageUrl = IPFSService.getIPFSUrl(imageHash);
     const musicUrl = IPFSService.getIPFSUrl(musicHash);
 
+    // Создаем метаданные
+    const metadataHash = await MetadataService.uploadMetadata({
+      name,
+      description,
+      artist,
+      genre: genre || undefined,
+      bpm: bpm ? parseInt(bpm) : undefined,
+      key: key || undefined,
+      imageHash,
+      musicHash,
+      creatorAddress,
+    });
+
+    const metadataUri = IPFSService.getIPFSUrl(metadataHash);
+
+    // Создаем NFT через смарт-контракт
+    const nftParams: CreateNftParams = {
+      title: name,
+      symbol: name.substring(0, 4).toUpperCase(),
+      uri: metadataUri,
+      genre: genre || 'Unknown',
+      price: parseFloat(price),
+      bpm: bpm ? parseInt(bpm) : 120,
+      key: key || 'C Major'
+    };
+
+    // Здесь нужно будет интегрировать с кошельком пользователя
+    // Пока что создаем только запись в базе данных
     const [newDrop] = await prisma.$transaction(async (tx: any) => {
       const drop = await tx.drop.create({
         data: {
@@ -59,24 +88,17 @@ export async function POST(request: Request) {
 
       return [drop];
     });
-
-    const metadataHash = await MetadataService.uploadMetadata({
-      name,
-      description,
-      artist,
-      genre: genre || undefined,
-      bpm: bpm ? parseInt(bpm) : undefined,
-      key: key || undefined,
-      imageHash,
-      musicHash,
-      creatorAddress,
-    });
     
-    return NextResponse.json({ drop: newDrop, metadataHash });
+    return NextResponse.json({ 
+      drop: newDrop, 
+      metadataHash,
+      nftParams,
+      message: 'NFT готов к созданию через смарт-контракт'
+    });
 
   } catch (error) {
-    console.error('Error in create-drop API:', error);
+    console.error('Error in create-nft API:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: `Failed to create drop: ${message}` }, { status: 500 });
+    return NextResponse.json({ error: `Failed to create NFT: ${message}` }, { status: 500 });
   }
 }

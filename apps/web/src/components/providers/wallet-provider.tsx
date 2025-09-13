@@ -30,9 +30,10 @@ export function WalletContextProvider({ children }: { children: React.ReactNode 
     []
   );
 
-  // Инициализируем Solana сервис при загрузке
   useEffect(() => {
-    SolanaService.initialize(endpoint);
+    if (typeof window !== 'undefined') {
+      SolanaService.initialize(endpoint);
+    }
   }, [endpoint]);
 
   return (

@@ -52,60 +52,40 @@ export function AdminDashboard() {
   const fetchStats = async () => {
     setLoading(true);
     try {
-      // В реальном приложении здесь был бы запрос к API
-      // const response = await fetch(`/api/stats/dashboard?period=${period}`);
-      // const data = await response.json();
+      const response = await fetch(`/api/stats/dashboard?period=${period}`);
+      const result = await response.json();
       
-      // Моковые данные для демонстрации
-      const mockStats: DashboardStats = {
-        drops: {
-          totalDrops: 12,
-          activeDrops: 4,
-          completedDrops: 6,
-          draftDrops: 2,
-          totalSupply: 1500,
-          totalMinted: 890,
-        },
-        transactions: {
-          totalTransactions: 234,
-          confirmedTransactions: 220,
-          pendingTransactions: 8,
-          failedTransactions: 6,
-        },
-        volume: {
-          totalVolume: 456.78,
-          totalRoyalties: 410.10,
-          totalFees: 46.68,
-          avgTransactionSize: 2.07,
-        },
-        topDrops: [
-          {
-            drop: { id: '1', name: 'Midnight Dreams', artist: 'ElectroWave' },
-            volume: 125.5,
-            salesCount: 45,
-          },
-          {
-            drop: { id: '2', name: 'Rock Legends', artist: 'RockLegend' },
-            volume: 98.2,
-            salesCount: 38,
-          },
-        ],
-        recentActivity: [
-          {
-            transaction: {
-              signature: 'tx123...',
-              amount: 2.5,
-              type: 'purchase',
-              createdAt: '2024-01-16T10:30:00Z', // Фиксированная дата
-            },
-            drop: { name: 'Midnight Dreams', artist: 'ElectroWave' },
-          },
-        ],
-      };
+      if (!response.ok) {
+        throw new Error(result.error || 'Ошибка загрузки статистики');
+      }
       
-      setStats(mockStats);
+      setStats(result.data);
     } catch (error) {
       console.error('Ошибка загрузки статистики:', error);
+      setStats({
+        drops: {
+          totalDrops: 0,
+          activeDrops: 0,
+          completedDrops: 0,
+          draftDrops: 0,
+          totalSupply: 0,
+          totalMinted: 0,
+        },
+        transactions: {
+          totalTransactions: 0,
+          confirmedTransactions: 0,
+          pendingTransactions: 0,
+          failedTransactions: 0,
+        },
+        volume: {
+          totalVolume: 0,
+          totalRoyalties: 0,
+          totalFees: 0,
+          avgTransactionSize: 0,
+        },
+        topDrops: [],
+        recentActivity: [],
+      });
     } finally {
       setLoading(false);
     }
@@ -120,7 +100,7 @@ export function AdminDashboard() {
       <div className="flex items-center justify-center py-20">
         <div className="flex items-center gap-3 text-muted-light">
           <RefreshCw className="w-6 h-6 animate-spin" />
-          <span>Загрузка статистики...</span>
+          <span>Загрузка...</span>
         </div>
       </div>
     );
@@ -129,7 +109,7 @@ export function AdminDashboard() {
   if (!stats) {
     return (
       <div className="text-center py-20">
-        <p className="text-muted-light">Ошибка загрузки данных</p>
+        <p className="text-muted-light">Ошибка загрузки</p>
         <button
           onClick={fetchStats}
           className="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-medium transition-colors"
@@ -180,7 +160,6 @@ export function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Фильтр периода */}
       <div className="flex items-center gap-4">
         <span className="text-muted-light">Период:</span>
         <div className="flex gap-2">
@@ -205,7 +184,6 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      {/* Основные метрики */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Общий объем"
@@ -237,9 +215,7 @@ export function AdminDashboard() {
         />
       </div>
 
-      {/* Детальная статистика */}
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Статистика дропов */}
         <div className="bg-dark-card border border-dark rounded-2xl p-6">
           <h3 className="text-lg font-medium text-light mb-4">Статистика дропов</h3>
           <div className="space-y-4">
@@ -269,61 +245,111 @@ export function AdminDashboard() {
           </div>
         </div>
 
-        {/* Топ дропы */}
         <div className="bg-dark-card border border-dark rounded-2xl p-6">
-          <h3 className="text-lg font-medium text-light mb-4">Топ дропы по объему</h3>
-          <div className="space-y-4">
-            {stats.topDrops.map((item, index) => (
-              <div key={item.drop.id} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-purple-600/20 rounded-lg flex items-center justify-center">
-                    <span className="text-purple-400 font-medium text-sm">
-                      #{index + 1}
-                    </span>
+          <h3 className="text-lg font-medium text-light mb-4">Последние дропы</h3>
+          {stats.topDrops.length > 0 ? (
+            <div className="space-y-4">
+              {stats.topDrops.map((item, index) => (
+                <div key={item.drop.id} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-purple-600/20 rounded-lg flex items-center justify-center">
+                      <span className="text-purple-400 font-medium text-sm">
+                        #{index + 1}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-light font-medium">{item.drop.name}</p>
+                      <p className="text-muted-light text-sm">by {item.drop.artist}</p>
+                    </div>
                   </div>
+                  <div className="text-right">
+                    {item.volume > 0 ? (
+                      <>
+                        <p className="text-light font-medium">{item.volume.toFixed(2)} SOL</p>
+                        <p className="text-muted-light text-sm">{item.salesCount} продаж</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-muted-light text-sm">Нет продаж</p>
+                        <p className="text-muted-light text-xs">Ожидает интеграции</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Package className="w-12 h-12 text-muted-light mx-auto mb-3" />
+            <p className="text-muted-light">Нет данных</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-dark-card border border-dark rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium text-light">Последняя активность</h3>
+          <button
+            onClick={fetchStats}
+            className="p-2 hover:bg-purple-600/20 rounded-lg transition-colors text-muted-light hover:text-light"
+            title="Обновить"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        </div>
+        
+        {stats.recentActivity.length > 0 ? (
+          <div className="space-y-3">
+            {stats.recentActivity.map((item, index) => (
+              <div key={index} className="flex items-center justify-between py-3 border-b border-dark last:border-b-0">
+                <div className="flex items-center gap-3">
+                  <div className={`w-2 h-2 rounded-full ${
+                    item.transaction.type === 'purchase' ? 'bg-green-400' :
+                    item.transaction.type === 'mint' ? 'bg-blue-400' :
+                    item.transaction.type === 'drop_created' ? 'bg-yellow-400' :
+                    item.transaction.type === 'transfer' ? 'bg-yellow-400' :
+                    'bg-gray-400'
+                  }`}></div>
                   <div>
-                    <p className="text-light font-medium">{item.drop.name}</p>
-                    <p className="text-muted-light text-sm">by {item.drop.artist}</p>
+                    <p className="text-light">
+                      {item.transaction.type === 'purchase' ? 'Покупка' :
+                       item.transaction.type === 'mint' ? 'Минтинг' :
+                       item.transaction.type === 'drop_created' ? 'Создан дроп' :
+                       item.transaction.type === 'transfer' ? 'Перевод' :
+                       'Транзакция'} "{item.drop?.name || 'Unknown'}"
+                    </p>
+                    <p className="text-muted-light text-sm">
+                      {typeof window === 'undefined' 
+                        ? new Date(item.transaction.createdAt).toISOString()
+                        : new Date(item.transaction.createdAt).toLocaleString('ru-RU')
+                      }
+                    </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-light font-medium">{item.volume.toFixed(2)} SOL</p>
-                  <p className="text-muted-light text-sm">{item.salesCount} продаж</p>
+                  {item.transaction.type === 'purchase' ? (
+                    <>
+                      <p className="text-light font-medium">
+                        {item.transaction.amount} SOL
+                      </p>
+                      <p className="text-muted-light text-sm font-mono">
+                        {item.transaction.signature.slice(0, 8)}...
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-muted-light text-sm">Системное событие</p>
+                  )}
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      </div>
-
-      {/* Последняя активность */}
-      <div className="bg-dark-card border border-dark rounded-2xl p-6">
-        <h3 className="text-lg font-medium text-light mb-4">Последняя активность</h3>
-        <div className="space-y-3">
-          {stats.recentActivity.map((item, index) => (
-            <div key={index} className="flex items-center justify-between py-3 border-b border-dark last:border-b-0">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <div>
-                  <p className="text-light">
-                    Покупка "{item.drop?.name || 'Unknown'}"
-                  </p>
-                  <p className="text-muted-light text-sm">
-                    {new Date(item.transaction.createdAt).toLocaleString('ru-RU')}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-light font-medium">
-                  {item.transaction.amount} SOL
-                </p>
-                <p className="text-muted-light text-sm">
-                  {item.transaction.signature.slice(0, 8)}...
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
+        ) : (
+          <div className="text-center py-8">
+            <Activity className="w-12 h-12 text-muted-light mx-auto mb-3" />
+            <p className="text-muted-light">Нет активности</p>
+          </div>
+        )}
       </div>
     </div>
   );

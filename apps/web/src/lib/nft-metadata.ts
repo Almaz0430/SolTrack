@@ -63,17 +63,24 @@ export class NFTMetadataService {
    */
   static async getNFTsForWallet(walletAddress: string): Promise<any[]> {
     try {
+      if (!this.connection) {
+        throw new Error('Connection not initialized');
+      }
+
       const walletPublicKey = new PublicKey(walletAddress);
       
-      // Получаем все токен аккаунты кошелька
+      if (!this.connection.getParsedTokenAccountsByOwner) {
+        console.warn('getParsedTokenAccountsByOwner not available');
+        return [];
+      }
+
       const tokenAccounts = await this.connection.getParsedTokenAccountsByOwner(
         walletPublicKey,
         {
-          programId: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'), // SPL Token Program
+          programId: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
         }
       );
 
-      // Фильтруем NFT (токены с количеством 1 и 0 десятичных знаков)
       const nfts = tokenAccounts.value.filter(account => {
         const tokenInfo = account.account.data.parsed.info;
         return tokenInfo.tokenAmount.decimals === 0 && 
