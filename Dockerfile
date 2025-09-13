@@ -17,9 +17,6 @@ COPY . .
 # We need dev dependencies like `prisma` for the build step
 RUN pnpm install
 
-# Apply database migrations
-RUN pnpm --filter web prisma migrate deploy
-
 # Generate Prisma Client
 RUN pnpm --filter web prisma generate
 
@@ -33,4 +30,5 @@ EXPOSE 3000
 ENV NODE_ENV=production
 
 # Define the command to run the app
-CMD ["pnpm", "--filter", "web", "start"]
+# Run migrations and then start the application
+CMD ["sh", "-c", "pnpm --filter web prisma migrate deploy && pnpm --filter web start"]
